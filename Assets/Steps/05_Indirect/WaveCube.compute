@@ -1,0 +1,69 @@
+// Rung 5 simulation. One thread per cube: it owns the spring state, integrates it and writes the
+// finished object-to-world matrix that the indirect draw reads. The CPU never sees a cube position;
+// it only sets the constants below and dispatches. Mirrors Assets/Common/Core/ObjectField.cs through
+// the shared ObjectField.hlsl, so the picture is identical to rungs 1-4.
+#pragma kernel WaveCubes
+
+#include "ObjectField.hlsl"
+
+// Thread group width; IndirectBackend.ThreadGroupSize must match.
+#define WAVE_CUBES_THREAD_GROUP_SIZE 64
+
+// Per-object state, all float4 so the strides stay 16-byte aligned on Vulkan.
+RWStructuredBuffer<float4x4> _LocalToWorld;
+RWStructuredBuffer<float4> _Displacement;
+RWStructuredBuffer<float4> _Velocity;
+
+// Frame constants, set from IndirectBackend before every dispatch.
+uint _Count;
+uint _Side;
+uint _IndexOffset;   // first object of this dispatch chunk; see IndirectBackend.DispatchInChunks
+float _Time;
+float _DeltaTime;
+float4 _Attractor;
+
+// Mirror of FieldParams, one loose uniform per field so the C# side can use SetFloat.
+float _Spacing;
+float _CubeScale;
+float _WaveAmplitude;
+float _WaveLength;
+float _WaveSpeed;
+float _RotationSpeed;
+float _SpringStiffness;
+float _SpringDamping;
+float _AttractorStrength;
+
+// Packs the loose uniforms into the struct the shared maths takes.
+FieldParams LoadFieldParams()
+{
+    FieldParams parameters;
+    parameters.Spacing = _Spacing;
+    parameters.CubeScale = _CubeScale;
+    parameters.WaveAmplitude = _WaveAmplitude;
+    parameters.WaveLength = _WaveLength;
+    parameters.WaveSpeed = _WaveSpeed;
+    parameters.RotationSpeed = _RotationSpeed;
+    parameters.SpringStiffness = _SpringStiffness;
+    parameters.SpringDamping = _SpringDamping;
+    parameters.AttractorStrength = _AttractorStrength;
+    return parameters;
+}
+
+[numthreads(WAVE_CUBES_THREAD_GROUP_SIZE, 1, 1)]
+void WaveCubes(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x + _IndexOffset;
+    if (index >= _Count)
+        return;
+
+    FieldParams parameters = LoadFieldParams();
+    float3 rest = ObjectFieldRestPosition(index, _Side, parameters.Spacing);
+
+    float3 displacement = _Displacement[index].xyz;
+    float3 velocity = _Velocity[index].xyz;
+    ObjectFieldIntegrateSpring(displacement, velocity, rest, _Attractor, _DeltaTime, parameters);
+    _Displacement[index] = float4(displacement, 0.0);
+    _Velocity[index] = float4(velocity, 0.0);
+
+    _LocalToWorld[index] = ObjectFieldLocalToWorld(index, rest, displacement, _Time, parameters);
+}

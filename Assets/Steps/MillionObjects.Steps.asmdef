@@ -1,0 +1,19 @@
+{
+    "name": "MillionObjects.Steps",
+    "rootNamespace": "MillionObjects.Steps",
+    "references": [
+        "MillionObjects.Common",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
