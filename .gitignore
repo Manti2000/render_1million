@@ -121,3 +121,6 @@ InitTestScene*.unity*
 Thumbs.db
 .idea/
 *.swp
+
+# Generated from Benchmarks/*.json by Tools/plot_bench.py
+/charts/
