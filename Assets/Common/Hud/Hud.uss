@@ -1,0 +1,92 @@
+/* Sized for a 1080p recording viewed from the back of a conference room. */
+.hud {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    flex-direction: column;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 240);
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.9);
+}
+
+.title {
+    font-size: 44px;
+    margin-bottom: 8px;
+    color: rgb(255, 214, 102);
+}
+
+.stats {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+    height: 36px;
+}
+
+.key {
+    width: 170px;
+    font-size: 26px;
+    color: rgb(170, 190, 220);
+}
+
+.value {
+    width: 220px;
+    font-size: 30px;
+    -unity-text-align: middle-right;
+    margin-right: 16px;
+}
+
+.value.secondary {
+    width: 160px;
+    color: rgb(170, 190, 220);
+}
+
+.value.small {
+    width: 620px;
+    font-size: 22px;
+    -unity-text-align: middle-left;
+}
+
+.bar {
+    height: 22px;
+    width: 0;
+    background-color: rgb(120, 130, 150);
+}
+
+.bar.cpu {
+    background-color: rgb(255, 140, 60);
+}
+
+.bar.gpu {
+    background-color: rgb(80, 190, 255);
+}
+
+.bar.bottleneck {
+    background-color: rgb(255, 70, 70);
+}
+
+.strip {
+    width: 600px;
+    height: 120px;
+    margin-top: 12px;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.card {
+    margin-top: 16px;
+}
+
+.clock {
+    margin-top: 12px;
+    font-size: 26px;
+    color: rgb(170, 190, 220);
+}
+
+.status {
+    margin-top: 4px;
+    font-size: 26px;
+    color: rgb(255, 214, 102);
+}

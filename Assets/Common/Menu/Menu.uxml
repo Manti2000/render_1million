@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Menu.uss" />
+    <ui:Button name="back" text="◂  Menu  (Esc)" class="back" />
+    <ui:VisualElement name="menu" class="menu">
+        <ui:VisualElement class="panel">
+            <ui:Label text="Million Objects" class="title" />
+            <ui:Label text="How to render 1 million objects in Unity without a hitch" class="subtitle" />
+            <ui:Label text="Step" class="section" />
+            <ui:VisualElement name="steps" class="steps" />
+            <ui:Label text="Objects" class="section" />
+            <ui:VisualElement name="counts" class="counts" />
+            <ui:Label text="Automatic" class="section" />
+            <ui:VisualElement class="row">
+                <ui:Button name="benchmark-full" text="Run benchmark (~10 min)" class="button auto" />
+                <ui:Button name="benchmark-quick" text="Quick benchmark (~3 min)" class="button auto" />
+                <ui:Button name="record" text="Recording script" class="button auto" />
+            </ui:VisualElement>
+            <ui:Label name="status" text="" class="status" />
+            <ui:Label text="Esc returns here · 1-5 switch step · Up/Down count · A attractor · click recolours · H HUD · Space freeze" class="hint" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

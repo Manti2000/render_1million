@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7cb0855158d267bea7ec76b5016a8ca, type: 3}
+  m_Name: StepCatalog
+  m_EditorClassIdentifier: MillionObjects.Common::MillionObjects.StepCatalog
+  _steps:
+  - _id: mono
+    _displayName: "1 \xB7 MonoBehaviour per object"
+    _scenePath: Assets/Steps/01_MonoBehaviour/01_MonoBehaviour.unity
+  - _id: manager
+    _displayName: "2 \xB7 Manager + Burst job"
+    _scenePath: Assets/Steps/02_Manager/02_Manager.unity
+  - _id: ecs
+    _displayName: "3 \xB7 DOTS / ECS"
+    _scenePath: Assets/Steps/03_Ecs/03_Ecs.unity
+  - _id: instanced
+    _displayName: "4 \xB7 GPU instanced"
+    _scenePath: Assets/Steps/04_Instanced/04_Instanced.unity
+  - _id: indirect
+    _displayName: "5 \xB7 GPU indirect + compute"
+    _scenePath: Assets/Steps/05_Indirect/05_Indirect.unity

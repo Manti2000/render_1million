@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:mo="MillionObjects" editor-extension-mode="False">
+    <Style src="Hud.uss" />
+    <ui:VisualElement name="hud" class="hud">
+        <ui:Label name="step-name" text="Step" class="title" />
+        <ui:VisualElement class="stats">
+            <ui:VisualElement class="row"><ui:Label text="objects" class="key" /><ui:Label name="count" text="0" class="value" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="frame" class="key" /><ui:Label name="frame-ms" text="0.0 ms" class="value" /><ui:Label name="fps" text="0 fps" class="value secondary" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="main" class="key" /><ui:Label name="main-ms" text="0.0 ms" class="value" /><ui:VisualElement name="bar-main" class="bar cpu" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="render" class="key" /><ui:Label name="render-ms" text="0.0 ms" class="value" /><ui:VisualElement name="bar-render" class="bar cpu" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="gpu" class="key" /><ui:Label name="gpu-ms" text="0.0 ms" class="value" /><ui:VisualElement name="bar-gpu" class="bar gpu" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="draw calls" class="key" /><ui:Label name="draw-calls" text="0" class="value" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="memory" class="key" /><ui:Label name="memory" text="0 MB" class="value" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="spawn" class="key" /><ui:Label name="spawn-ms" text="0 ms" class="value" /></ui:VisualElement>
+        </ui:VisualElement>
+        <mo:FrameTimeStrip name="frame-strip" class="strip" />
+        <ui:VisualElement name="card" class="card">
+            <ui:VisualElement class="row"><ui:Label text="behaviour" class="key" /><ui:Label name="card-behaviour" text="" class="value small" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="ecosystem" class="key" /><ui:Label name="card-ecosystem" text="" class="value small" /></ui:VisualElement>
+            <ui:VisualElement class="row"><ui:Label text="+1 feature" class="key" /><ui:Label name="card-cost" text="" class="value small" /></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label name="clock" text="00:00.00" class="clock" />
+        <ui:Label name="status" text="" class="status" />
+    </ui:VisualElement>
+</ui:UXML>
