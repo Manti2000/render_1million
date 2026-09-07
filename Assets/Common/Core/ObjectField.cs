@@ -12,8 +12,14 @@ namespace MillionObjects
     public static class ObjectField
     {
         #region Constants
-        /// <summary>Number of colours in the palette. Palette indices are hashed into this range.</summary>
-        public const int PaletteSize = 16;
+        /// <summary>Brightness levels per hue in the palette.</summary>
+        public const int PaletteLevels = 32;
+        /// <summary>Number of colours in the palette: <see cref="PaletteLevels"/> brightness levels for each of two hues, interleaved even/odd.</summary>
+        public const int PaletteSize = PaletteLevels * 2;
+        /// <summary>Azimuth sectors the hue alternates over; six sectors give three arms of each hue.</summary>
+        private const int HueSectors = 6;
+        /// <summary>Spread of the hashed brightness jitter in palette levels, centred on the radial level; mirrored in HLSL.</summary>
+        private const int JitterLevels = 8;
         /// <summary>Knuth multiplicative hash constant used for palette selection; mirrored in HLSL.</summary>
         private const uint PaletteHashMultiplier = 2654435761u;
         /// <summary>Per-object rotation phase offset in radians, so neighbours do not rotate in lockstep.</summary>
@@ -175,17 +181,26 @@ namespace MillionObjects
 
         #region Colour
         /// <summary>
-        /// Palette slot of an object: a linear ramp over the horizontal distance from the cloud's centre
-        /// (band 13 at the centre, 0 at half the extent and beyond) plus 0–3 slots of hashed jitter so
-        /// neighbours differ. With the water palette that reads as deep blue outside grading to white
-        /// foam at the vortex. Static per object, so no rung recolours anything per frame.
+        /// Palette slot of an object. The palette is laid out as 32 brightness levels × 2 hues (even slots
+        /// one hue, odd slots the other). Brightness comes from the horizontal distance to the centre, dark
+        /// at the edge and white at the vortex, plus up to <see cref="JitterLevels"/> levels of hashed
+        /// jitter so a colour region is speckled rather than flat. The hue comes from the azimuth sector
+        /// of the rest position, alternating every 60 degrees, with one cube in eight flipped to the other
+        /// hue for extra grain: the vortex's differential rotation then shears those sectors into visible
+        /// spiral arms, which a radius-only colouring could never show. Static per object, so no rung
+        /// recolours anything per frame.
         /// </summary>
         public static int PaletteIndex(int index, float3 restPosition, in FieldParams parameters)
         {
+            uint hash = (uint)index * PaletteHashMultiplier;
             float radial = math.length(restPosition.xz) / math.max(parameters.FieldExtent * 0.5f, 1e-3f);
-            int band = (int)math.floor(math.saturate(1f - radial) * (PaletteSize - 3) + 0.5f);
-            int jitter = (int)(((uint)index * PaletteHashMultiplier) >> 30);
-            return math.min(band + jitter, PaletteSize - 1);
+            int level = (int)math.floor(math.saturate(1f - radial) * (PaletteLevels - 1) + 0.5f);
+            int jitter = (int)(hash >> 29) * JitterLevels / 8;
+            float azimuth = math.atan2(restPosition.z, restPosition.x) + math.PI;
+            int hue = (int)math.floor(azimuth / (2f * math.PI) * HueSectors) & 1;
+            if (((hash >> 26) & 7u) == 0u)
+                hue ^= 1;
+            return math.clamp(level + jitter - JitterLevels / 2, 0, PaletteLevels - 1) * 2 + hue;
         }
         #endregion
 

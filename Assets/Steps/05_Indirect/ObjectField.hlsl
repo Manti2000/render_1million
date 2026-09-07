@@ -7,8 +7,12 @@
 // function below names the C# member it mirrors; the two must be edited together or the rungs stop
 // drawing the identical picture.
 
-// Mirrors ObjectField.PaletteSize.
-#define OBJECT_FIELD_PALETTE_SIZE 16
+// Mirrors ObjectField.PaletteSize, PaletteLevels and HueSectors.
+#define OBJECT_FIELD_PALETTE_LEVELS 32
+#define OBJECT_FIELD_PALETTE_SIZE (OBJECT_FIELD_PALETTE_LEVELS * 2)
+#define OBJECT_FIELD_HUE_SECTORS 6
+// Mirrors ObjectField.JitterLevels.
+#define OBJECT_FIELD_JITTER_LEVELS 8
 // Mirrors ObjectField.PaletteHashMultiplier (Knuth multiplicative hash).
 #define OBJECT_FIELD_PALETTE_HASH_MULTIPLIER 2654435761u
 // Mirrors ObjectField.RotationPhaseStep.
@@ -159,13 +163,19 @@ float4x4 ObjectFieldLocalToWorld(uint index, float3 restPosition, float3 displac
     return ObjectFieldCompose(position, ObjectFieldRotation(index, time, parameters), parameters.CubeScale);
 }
 
-// Mirrors ObjectField.PaletteIndex: radial ramp from the cloud's edge to its centre plus 0-3 slots of hashed jitter.
+// Mirrors ObjectField.PaletteIndex: brightness level from the radius (plus one level of hashed jitter),
+// hue from the azimuth sector, so the vortex shear winds the sectors into spiral arms.
 uint ObjectFieldPaletteIndex(uint index, float3 restPosition, float fieldExtent)
 {
+    uint hash = index * OBJECT_FIELD_PALETTE_HASH_MULTIPLIER;
     float radial = length(restPosition.xz) / max(fieldExtent * 0.5, 1e-3);
-    uint band = (uint)floor(saturate(1.0 - radial) * (OBJECT_FIELD_PALETTE_SIZE - 3) + 0.5);
-    uint jitter = (index * OBJECT_FIELD_PALETTE_HASH_MULTIPLIER) >> 30;
-    return min(band + jitter, (uint)(OBJECT_FIELD_PALETTE_SIZE - 1));
+    int level = (int)floor(saturate(1.0 - radial) * (OBJECT_FIELD_PALETTE_LEVELS - 1) + 0.5);
+    int jitter = (int)(hash >> 29) * OBJECT_FIELD_JITTER_LEVELS / 8;
+    float azimuth = atan2(restPosition.z, restPosition.x) + OBJECT_FIELD_PI;
+    uint hue = (uint)floor(azimuth / (2.0 * OBJECT_FIELD_PI) * OBJECT_FIELD_HUE_SECTORS) & 1u;
+    if (((hash >> 26) & 7u) == 0u)
+        hue ^= 1u;
+    return (uint)clamp(level + jitter - OBJECT_FIELD_JITTER_LEVELS / 2, 0, OBJECT_FIELD_PALETTE_LEVELS - 1) * 2u + hue;
 }
 
 // Mirrors ObjectField.AttractorPush. Written without early returns so every path initialises the

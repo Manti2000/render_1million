@@ -73,7 +73,7 @@ namespace MillionObjects.Steps.IndirectStep
         private GraphicsBuffer _displacementBuffer;      // spring offset per object, float4 for stride alignment
         private GraphicsBuffer _velocityBuffer;          // spring velocity per object, float4 for stride alignment
         private GraphicsBuffer _paletteOverrideBuffer;   // recolour demo: 0 means "hash the index", otherwise paletteIndex + 1
-        private GraphicsBuffer _paletteBuffer;           // the 16 palette colours; a buffer because material array properties are dropped at runtime
+        private GraphicsBuffer _paletteBuffer;           // the palette colours; a buffer because material array properties are dropped at runtime
         private GraphicsBuffer _argumentsBuffer;         // the single IndirectDrawIndexedArgs the draw call reads
         private Material _material;                      // instance of the indirect shader owning the buffer bindings
         private RenderParams _renderParams;              // built once per spawn; worldBounds covers the whole sheet

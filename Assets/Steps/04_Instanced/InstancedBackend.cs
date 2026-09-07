@@ -38,7 +38,7 @@ namespace MillionObjects.Steps
         private readonly int[] _bucketMemberCounts = new int[BucketCount];   // objects per palette bucket
         private readonly int[] _bucketStarts = new int[BucketCount];         // first matrix slot of each bucket
         private readonly int[] _bucketFillCursors = new int[BucketCount];    // next free slot per bucket while laying out
-        private PaletteMaterialSet _paletteMaterials;                        // 16 instancing-enabled material instances
+        private PaletteMaterialSet _paletteMaterials;                        // one instancing-enabled material instance per palette slot
         private RenderParams[] _bucketRenderParams;                          // one cached RenderParams per bucket
         private NativeArray<float3> _restPositions;                          // grid position each object springs back to
         private NativeArray<float3> _displacements;                          // offset from rest, persistent across frames

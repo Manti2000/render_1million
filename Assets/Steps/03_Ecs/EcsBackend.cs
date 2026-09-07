@@ -33,7 +33,7 @@ namespace MillionObjects.Steps.Ecs
 
         #region Private fields
         private NativeArray<Entity> _entities;         // object index -> entity, filled by the init job
-        private NativeArray<float4> _paletteColors;    // the 16 palette colours in linear space
+        private NativeArray<float4> _paletteColors;    // the palette colours in linear space
         private Entity _frameEntity;                   // holds the WaveFieldFrame singleton
         #endregion
 
