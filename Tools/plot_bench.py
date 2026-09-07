@@ -12,6 +12,7 @@ background, horizontal bars, values at the bar ends:
   summary/frametime_vs_count      average frame time against object count, one line per step per device
   steps/<step>/fps_at_1m          a row per device with average and 1% low fps at one million objects
   steps/<step>/objects_at_30fps   a row per device with the 30 fps count
+  steps/<step>/frametime_vs_count frame time against object count for this step, one line per device
 """
 import argparse
 import json
@@ -37,8 +38,8 @@ SERIES_COLORS = {"avg": "#2196f3", "low1": "#f57c00"}
 # Each metric owns a colour family so "fps" and "objects" charts never look like the same benchmark;
 # devices are shades within the family.
 METRIC_COLORS = {
-    "fps": ["#2196f3", "#7cc0f7", "#0d47a1", "#b3daf9", "#1565c0", "#e3f2fd"],
-    "objects": ["#26a69a", "#80cbc4", "#00695c", "#b2dfdb", "#00897b", "#e0f2f1"],
+    "fps": ["#2196f3", "#a5d6ff", "#0d47a1", "#64b5f6", "#e3f2fd", "#1565c0"],
+    "objects": ["#26a69a", "#b2ece6", "#00594f", "#66d1c4", "#e0f7f4", "#00897b"],
 }
 DEVICE_COLORS = ["#2196f3", "#f57c00", "#ffb300", "#66bb6a", "#ab47bc", "#26c6da"]   # line chart series
 
@@ -247,9 +248,10 @@ def chart_step_objects_at_30fps(reports, backend, out):
     save(fig, out, os.path.join("steps", step_slug(backend)), "objects_at_30fps", reports, top=None)
 
 
-def chart_frametime_vs_count(reports, backends, out):
+def chart_frametime_vs_count(reports, backends, out, folder="summary", title="Average frame time against object count", color_by_device=False):
+    """Log-log frame time curves. Summary: one colour per step, line style per device. Per step: one colour per device."""
     fig, ax = plt.subplots(figsize=(13, 7))
-    ax.set_title("Average frame time against object count", fontsize=17, fontweight="bold", pad=26)
+    ax.set_title(title, fontsize=17, fontweight="bold", pad=26)
     ax.text(0.5, 1.02, "frame time · lower is better", transform=ax.transAxes, ha="center", fontsize=11, color=MUTED, style="italic")
     styles = ["-", "--", ":", "-."]
     for device_index, report in enumerate(reports):
@@ -258,9 +260,13 @@ def chart_frametime_vs_count(reports, backends, out):
             rows = sorted((r for r in measured if r["backend"] == backend and r["status"] == "ok"), key=lambda r: r["count"])
             if not rows:
                 continue
-            label = backend if len(reports) == 1 else f'{backend} — {report["_label"]}'
-            ax.plot([r["count"] for r in rows], [r["frameMs"]["avg"] for r in rows], styles[device_index % len(styles)],
-                    marker="o", markersize=4, linewidth=2, label=label, color=DEVICE_COLORS[backend_index % len(DEVICE_COLORS)])
+            if color_by_device:
+                label, color, style = report["_label"], DEVICE_COLORS[device_index % len(DEVICE_COLORS)], "-"
+            else:
+                label = backend if len(reports) == 1 else f'{backend} — {report["_label"]}'
+                color, style = DEVICE_COLORS[backend_index % len(DEVICE_COLORS)], styles[device_index % len(styles)]
+            ax.plot([r["count"] for r in rows], [r["frameMs"]["avg"] for r in rows], style,
+                    marker="o", markersize=4, linewidth=2, label=label, color=color)
     ax.axhline(TARGET_MS, color=TEXT, linestyle=":", linewidth=1)
     ax.annotate("30 fps", xy=(0.01, TARGET_MS), xycoords=("axes fraction", "data"), xytext=(0, 4), textcoords="offset points", fontsize=10, color=MUTED)
     ax.set_xscale("log")
@@ -269,11 +275,14 @@ def chart_frametime_vs_count(reports, backends, out):
     ax.set_xlabel("objects")
     ax.set_ylabel("average frame time, ms")
     ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:,.0f}"))
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.yaxis.set_major_locator(matplotlib.ticker.LogLocator(base=10, subs=(1.0, 2.0, 5.0)))
     ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     for spine in ax.spines.values():
         spine.set_color(GRID)
     ax.legend(fontsize=9, frameon=False)
-    save(fig, out, "summary", "frametime_vs_count", reports, top=1.0)
+    save(fig, out, folder, "frametime_vs_count", reports, top=1.0)
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -295,6 +304,7 @@ def main():
     for backend in backends:
         chart_step_fps_at_1m(reports, backend, args.out)
         chart_step_objects_at_30fps(reports, backend, args.out)
+        chart_frametime_vs_count(reports, [backend], args.out, os.path.join("steps", step_slug(backend)), f"{backend}  ·  frame time against object count", color_by_device=True)
     chart_frametime_vs_count(reports, backends, args.out)
 
 

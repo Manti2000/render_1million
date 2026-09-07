@@ -8,7 +8,7 @@ Five backends render the same animated cloud of cubes, a jittered cubic lattice 
 |---|---|---|
 | 1 | `Assets/Steps/01_MonoBehaviour` | One GameObject and one `MonoBehaviour.Update` per object |
 | 2 | `Assets/Steps/02_Manager` | One GameObject per object, one manager with a Burst `IJobParallelForTransform` |
-| 3 | `Assets/Steps/03_Ecs` | Entities, Entities Graphics, an `ISystem` with an `IJobEntity` |
+| 3 | `Assets/Steps/03_Ecs` | Entities, Entities Graphics, an `ISystem` with an `IJobEntity` writing the render matrix directly |
 | 4 | `Assets/Steps/04_Instanced` | No GameObjects; Burst job writes matrices, `Graphics.RenderMeshInstanced` per palette bucket |
 | 5 | `Assets/Steps/05_Indirect` | Compute shader owns all state, one `Graphics.RenderMeshIndirect` call |
 
@@ -36,7 +36,7 @@ Open `Assets/Common/Scenes/Bootstrap.unity` and press Play. A start menu lets yo
 
 ## Benchmarking
 
-Build a player and run it with `-benchmark`, or press one of the benchmark buttons in the start menu. It applies a fixed display state (vsync off, uncapped frame rate, render scale 1, 1920x1080 on PC or native 1280x800 on Steam Deck), walks every step, and writes one JSON report to a `Benchmarks` folder next to the executable, then quits.
+Build a player and run it with `-benchmark`, or press one of the benchmark buttons in the start menu. It applies a fixed display state (vsync off, uncapped frame rate, render scale 1, a 1920-wide frame at the display's own aspect on PC, 1920x1200 on 16:10 laptops, or native 1280x800 on Steam Deck), walks every step, and writes one JSON report to a `Benchmarks` folder next to the executable, then quits.
 
 For every step it runs two measurements:
 
