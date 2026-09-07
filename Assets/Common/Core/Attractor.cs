@@ -12,10 +12,14 @@ namespace MillionObjects
         #region Inspector fields
         [SerializeField, Tooltip("Switcher whose active backend receives the attractor.")]
         private BackendSwitcher _switcher;
-        [SerializeField, Tooltip("Sphere shown at the attractor position; scaled to the radius.")]
+        [SerializeField, Tooltip("Small marker sphere shown at the attractor centre.")]
         private Transform _visual;
-        [SerializeField, Tooltip("Push radius in world units.")]
-        private float _radius = 8f;
+        [SerializeField, Tooltip("Push radius as a fraction of the field's largest extent, so the hole reads at any object count.")]
+        private float _radiusFraction = 0.12f;
+        [SerializeField, Tooltip("Smallest push radius in world units, for tiny fields.")]
+        private float _minRadius = 4f;
+        [SerializeField, Tooltip("Diameter of the marker sphere in world units. Kept small so it never hides the hole it carves.")]
+        private float _markerSize = 2f;
         [SerializeField, Tooltip("Vertical sweep as a fraction of the field's half height.")]
         private float _verticalSweep = 0.6f;
         [SerializeField, Tooltip("Seconds for one full sweep over the field.")]
@@ -29,6 +33,8 @@ namespace MillionObjects
         public bool Enabled { get; set; }
         /// <summary>Current attractor as (x, y, z, radius); radius zero when disabled.</summary>
         public float4 Current { get; private set; }
+        /// <summary>Push radius derived from the field size.</summary>
+        public float Radius => Mathf.Max(_minRadius, Mathf.Max(_field.size.x, Mathf.Max(_field.size.y, _field.size.z)) * _radiusFraction);
         #endregion
 
         #region Private fields
@@ -46,7 +52,7 @@ namespace MillionObjects
         {
             _elapsed += Time.deltaTime;
             Vector3 position = SweepPosition(_elapsed / _sweepSeconds);
-            Current = Enabled ? new float4(position, _radius) : float4.zero;
+            Current = Enabled ? new float4(position, Radius) : float4.zero;
             UpdateVisual(position);
             if (_switcher != null)
                 _switcher.Attractor = Current;
@@ -78,7 +84,7 @@ namespace MillionObjects
                 return;
             _visual.gameObject.SetActive(Enabled);
             _visual.position = position;
-            _visual.localScale = Vector3.one * (_radius * 2f);
+            _visual.localScale = Vector3.one * _markerSize;
         }
         #endregion
     }

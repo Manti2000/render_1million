@@ -81,7 +81,7 @@ namespace MillionObjects.Steps
         {
             if (!HasRenderAssets())
                 return;
-            _parameters = Settings.ToParams();
+            _parameters = Settings.ToParams(count);
             _sideLength = ObjectField.SideLength(count);
             _paletteMaterials = CreateInstancedPaletteMaterials();
             AllocateFieldState(count);
@@ -151,7 +151,7 @@ namespace MillionObjects.Steps
             for (int index = 0; index < count; index++)
             {
                 _restPositions[index] = ObjectField.RestPosition(index, _sideLength, _parameters.Spacing);
-                _paletteSlots[index] = ObjectField.PaletteIndex(index);
+                _paletteSlots[index] = ObjectField.PaletteIndex(index, _restPositions[index], in _parameters);
             }
         }
 

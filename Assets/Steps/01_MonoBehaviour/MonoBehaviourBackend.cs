@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -40,7 +41,7 @@ namespace MillionObjects.Steps.MonoBehaviourStep
                 Debug.LogError("[MonoBehaviourBackend] Field settings are missing the cube mesh or material; nothing was spawned.");
                 return;
             }
-            _fieldParameters = Settings.ToParams();
+            _fieldParameters = Settings.ToParams(count);
             _palette = new PaletteMaterialSet(Settings);
             _renderers = new MeshRenderer[count];
             CreateFieldRoot();
@@ -122,10 +123,11 @@ namespace MillionObjects.Steps.MonoBehaviourStep
         /// <summary>Gives one cube its palette material, its grid slot and its link back to this backend.</summary>
         private void InitializeCube(WaveCube cube, int index, int sideLength)
         {
+            float3 rest = ObjectField.RestPosition(index, sideLength, _fieldParameters.Spacing);
             MeshRenderer renderer = cube.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = _palette[ObjectField.PaletteIndex(index)];
+            renderer.sharedMaterial = _palette[ObjectField.PaletteIndex(index, rest, in _fieldParameters)];
             _renderers[index] = renderer;
-            cube.Initialize(this, index, ObjectField.RestPosition(index, sideLength, _fieldParameters.Spacing));
+            cube.Initialize(this, index, rest);
         }
         #endregion
 

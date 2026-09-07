@@ -3,16 +3,25 @@ using UnityEngine;
 namespace MillionObjects
 {
     /// <summary>
-    /// Keeps camera and attractor scaled to the active field: whenever a step loads or respawns,
-    /// recomputes the field bounds and hands them to the rig and the attractor. Every step load also
-    /// restarts the camera path so the pull-back plays from the start.
+    /// Keeps camera, attractor and shading scaled to the active field: whenever a step loads or respawns,
+    /// recomputes the field bounds, hands them to the rig and the attractor, and publishes the height band
+    /// the shaders darken across. Every step load also restarts the camera path so the pull-back plays
+    /// from the start.
     /// </summary>
     public class FieldFraming : MonoBehaviour
     {
+        #region Constants
+        private static readonly int ShadeTopId = Shader.PropertyToID("_ShadeTopY");
+        private static readonly int ShadeBottomId = Shader.PropertyToID("_ShadeBottomY");
+        private static readonly int ShadeFloorId = Shader.PropertyToID("_ShadeFloor");
+        #endregion
+
         #region Inspector fields
         [SerializeField] private BackendSwitcher _switcher;
         [SerializeField] private CameraRig _cameraRig;
         [SerializeField] private Attractor _attractor;
+        [SerializeField, Tooltip("Brightness of cubes at the deepest point of the funnel relative to the cloud's top.")]
+        private float _shadeFloor = 0.35f;
         #endregion
 
         #region Private fields
@@ -53,18 +62,27 @@ namespace MillionObjects
                 _cameraRig.Restart();
         }
 
+        /// <summary>Tells every cube shader where the cloud's top is and how deep the funnel reaches, so both shaders darken identically.</summary>
+        private void PublishShadeBand(Bounds framing, Bounds full)
+        {
+            Shader.SetGlobalFloat(ShadeTopId, framing.max.y);
+            Shader.SetGlobalFloat(ShadeBottomId, full.min.y);
+            Shader.SetGlobalFloat(ShadeFloorId, _shadeFloor);
+        }
+
         /// <summary>Recomputes the field bounds for a count and applies them to camera and attractor.</summary>
         private void Reframe(int count)
         {
             _framedCount = count;
             if (count <= 0)
                 return;
-            var parameters = _switcher.Settings.ToParams();
-            var bounds = ObjectField.FieldBounds(count, parameters);
+            var parameters = _switcher.Settings.ToParams(count);
+            var framing = ObjectField.FramingBounds(count, parameters);
             if (_cameraRig != null)
-                _cameraRig.SetField(bounds);
+                _cameraRig.SetField(framing);
             if (_attractor != null)
-                _attractor.SetField(bounds);
+                _attractor.SetField(framing);
+            PublishShadeBand(framing, ObjectField.FieldBounds(count, parameters));
         }
         #endregion
     }

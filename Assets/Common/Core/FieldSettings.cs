@@ -31,8 +31,16 @@ namespace MillionObjects
         private float _springStiffness = 12f;
         [SerializeField, Tooltip("Velocity damping of the spring-back motion.")]
         private float _springDamping = 2.5f;
-        [SerializeField, Tooltip("Peak push force of the attractor sphere at its centre.")]
-        private float _attractorStrength = 40f;
+        [SerializeField, Tooltip("Push force of the attractor sphere at its centre, per unit of its radius. With stiffness 12, a value of 8 carves a hole about two thirds of the radius deep.")]
+        private float _attractorStrength = 8f;
+
+        [Header("Whirlpool")]
+        [SerializeField, Tooltip("Radius at which the whirlpool's speed has halved, as a fraction of the cloud's extent. Zero disables it.")]
+        private float _swirlRadiusFraction = 0.25f;
+        [SerializeField, Tooltip("Angular speed at the whirlpool's centre, in radians per second; fades out with distance.")]
+        private float _swirlSpeed = 0.6f;
+        [SerializeField, Tooltip("Depth of the funnel at the whirlpool's centre as a fraction of the cloud's extent.")]
+        private float _swirlDepthFraction = 0.35f;
 
         [Header("Rendering")]
         [SerializeField, Tooltip("Mesh drawn for every object. Unit cube by default.")]
@@ -53,9 +61,10 @@ namespace MillionObjects
         #endregion
 
         #region Public interface
-        /// <summary>Copies the numeric parameters into a blittable struct for jobs and shaders.</summary>
-        public FieldParams ToParams()
+        /// <summary>Parameters for a field of <paramref name="count"/> objects: the whirlpool radius and depth scale with the cloud's extent.</summary>
+        public FieldParams ToParams(int count)
         {
+            float extent = ObjectField.SideLength(count) * _spacing;
             return new FieldParams
             {
                 Spacing = _spacing,
@@ -67,6 +76,10 @@ namespace MillionObjects
                 SpringStiffness = _springStiffness,
                 SpringDamping = _springDamping,
                 AttractorStrength = _attractorStrength,
+                FieldExtent = extent,
+                SwirlRadius = extent * _swirlRadiusFraction,
+                SwirlSpeed = _swirlSpeed,
+                SwirlDepth = extent * _swirlDepthFraction,
             };
         }
 

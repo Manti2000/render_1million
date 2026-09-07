@@ -48,6 +48,10 @@ namespace MillionObjects.Steps.IndirectStep
         private static readonly int SpringStiffnessId = Shader.PropertyToID("_SpringStiffness");
         private static readonly int SpringDampingId = Shader.PropertyToID("_SpringDamping");
         private static readonly int AttractorStrengthId = Shader.PropertyToID("_AttractorStrength");
+        private static readonly int FieldExtentId = Shader.PropertyToID("_FieldExtent");
+        private static readonly int SwirlRadiusId = Shader.PropertyToID("_SwirlRadius");
+        private static readonly int SwirlSpeedId = Shader.PropertyToID("_SwirlSpeed");
+        private static readonly int SwirlDepthId = Shader.PropertyToID("_SwirlDepth");
         #endregion
 
         #region Inspector fields
@@ -86,7 +90,7 @@ namespace MillionObjects.Steps.IndirectStep
         {
             if (!HasRequiredAssets())
                 return;
-            _fieldParameters = Settings.ToParams();
+            _fieldParameters = Settings.ToParams(count);
             _sideLength = ObjectField.SideLength(count);
             _kernelIndex = _waveCompute.FindKernel(WaveCubesKernelName);
             _threadGroups = (count + ThreadGroupSize - 1) / ThreadGroupSize;
@@ -210,6 +214,9 @@ namespace MillionObjects.Steps.IndirectStep
             _material.SetBuffer(LocalToWorldId, _localToWorldBuffer);
             _material.SetBuffer(PaletteOverrideId, _paletteOverrideBuffer);
             _material.SetBuffer(PaletteId, _paletteBuffer);
+            _material.SetInt(SideId, _sideLength);
+            _material.SetFloat(SpacingId, _fieldParameters.Spacing);
+            _material.SetFloat(FieldExtentId, _fieldParameters.FieldExtent);
         }
 
         /// <summary>Uploads the 16 palette colours, in palette-slot order, as linear float4s.</summary>
@@ -279,6 +286,10 @@ namespace MillionObjects.Steps.IndirectStep
             _waveCompute.SetFloat(SpringStiffnessId, _fieldParameters.SpringStiffness);
             _waveCompute.SetFloat(SpringDampingId, _fieldParameters.SpringDamping);
             _waveCompute.SetFloat(AttractorStrengthId, _fieldParameters.AttractorStrength);
+            _waveCompute.SetFloat(FieldExtentId, _fieldParameters.FieldExtent);
+            _waveCompute.SetFloat(SwirlRadiusId, _fieldParameters.SwirlRadius);
+            _waveCompute.SetFloat(SwirlSpeedId, _fieldParameters.SwirlSpeed);
+            _waveCompute.SetFloat(SwirlDepthId, _fieldParameters.SwirlDepth);
         }
         #endregion
 

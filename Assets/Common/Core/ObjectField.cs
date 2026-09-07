@@ -20,6 +20,8 @@ namespace MillionObjects
         private const float RotationPhaseStep = 0.618f;
         /// <summary>Random offset from the lattice point as a fraction of the spacing, per axis; mirrored in HLSL.</summary>
         private const float JitterFraction = 0.35f;
+        /// <summary>Radius of the whirlpool's open eye as a fraction of the swirl radius; mirrored in HLSL.</summary>
+        private const float SwirlCoreFraction = 0.3f;
         #endregion
 
         #region Layout
@@ -47,11 +49,18 @@ namespace MillionObjects
             return (cell - half + Jitter(index) * JitterFraction) * spacing;
         }
 
-        /// <summary>World-space bounds of the whole cloud including jitter and wave travel, for cameras and culling.</summary>
-        public static Bounds FieldBounds(int count, in FieldParams parameters)
+        /// <summary>The cloud's visible mass: the jittered lattice cube itself, without wave or funnel travel. What the camera frames.</summary>
+        public static Bounds FramingBounds(int count, in FieldParams parameters)
         {
             float extent = (SideLength(count) + 2f * JitterFraction) * parameters.Spacing + parameters.CubeScale;
-            float height = extent + parameters.WaveAmplitude * 2f;
+            return new Bounds(Vector3.zero, new Vector3(extent, extent, extent));
+        }
+
+        /// <summary>World-space bounds of everything that can be drawn, including jitter, wave and funnel travel, for culling.</summary>
+        public static Bounds FieldBounds(int count, in FieldParams parameters)
+        {
+            float extent = (SideLength(count) + 2f * JitterFraction) * parameters.Spacing + parameters.CubeScale + 2f * parameters.SwirlRadius * SwirlCoreFraction;   // the open eye pushes the outer cubes outward
+            float height = extent + (parameters.WaveAmplitude + math.max(parameters.SwirlDepth, 0f)) * 2f;   // wave travel and funnel dip both leave the lattice
             return new Bounds(Vector3.zero, new Vector3(extent, height, extent));
         }
 
@@ -85,6 +94,18 @@ namespace MillionObjects
         #endregion
 
         #region Motion
+        /// <summary>
+        /// How much the whirlpool affects a rest position: 1 at the centre, 1/2 at the swirl radius,
+        /// then a 1/r² tail like a real vortex, so the whole cloud turns slowly while the core spins.
+        /// Zero when disabled.
+        /// </summary>
+        public static float SwirlWeight(float3 restPosition, in FieldParams parameters)
+        {
+            if (parameters.SwirlRadius <= 0f)
+                return 0f;
+            return 1f / (1f + math.lengthsq(restPosition.xz) / (parameters.SwirlRadius * parameters.SwirlRadius));
+        }
+
         /// <summary>Vertical offset of the travelling diagonal wave at a rest position.</summary>
         public static float WaveHeight(float3 restPosition, float time, in FieldParams parameters)
         {
@@ -111,10 +132,30 @@ namespace MillionObjects
             return radians - math.floor(radians / twoPi) * twoPi;
         }
 
-        /// <summary>Final world position: rest position, plus wave height, plus any spring displacement.</summary>
+        /// <summary>Final world position: rest position, plus the whirlpool, plus wave height, plus any spring displacement.</summary>
         public static float3 Position(float3 restPosition, float3 displacement, float time, in FieldParams parameters)
         {
-            return restPosition + displacement + new float3(0f, WaveHeight(restPosition, time, parameters), 0f);
+            return restPosition + displacement + Swirl(restPosition, time, parameters) + new float3(0f, WaveHeight(restPosition, time, parameters), 0f);
+        }
+
+        /// <summary>
+        /// Whirlpool at the cloud's centre: cubes are pushed outward from the axis to open an eye, rotated
+        /// around the axis with the vortex speed profile, and pulled down into a funnel with the same
+        /// profile. Stateless, so every rung pays the same few operations per object.
+        /// </summary>
+        public static float3 Swirl(float3 restPosition, float time, in FieldParams parameters)
+        {
+            if (parameters.SwirlRadius <= 0f)
+                return float3.zero;
+            float2 planar = restPosition.xz;
+            float weight = SwirlWeight(restPosition, parameters);
+            float core = parameters.SwirlRadius * SwirlCoreFraction;
+            float radius = math.length(planar);
+            float2 opened = planar * (math.sqrt(radius * radius + core * core) / math.max(radius, 1e-4f));
+            float angle = WrapAngle(time * parameters.SwirlSpeed * weight);
+            math.sincos(angle, out float sin, out float cos);
+            float2 rotated = new float2(opened.x * cos - opened.y * sin, opened.x * sin + opened.y * cos);
+            return new float3(rotated.x - planar.x, -parameters.SwirlDepth * weight, rotated.y - planar.y);
         }
 
         /// <summary>Complete local-to-world matrix for an object with no spring displacement.</summary>
@@ -133,10 +174,18 @@ namespace MillionObjects
         #endregion
 
         #region Colour
-        /// <summary>Palette slot of an object; a multiplicative hash so neighbours differ.</summary>
-        public static int PaletteIndex(int index)
+        /// <summary>
+        /// Palette slot of an object: a linear ramp over the horizontal distance from the cloud's centre
+        /// (band 13 at the centre, 0 at half the extent and beyond) plus 0–3 slots of hashed jitter so
+        /// neighbours differ. With the water palette that reads as deep blue outside grading to white
+        /// foam at the vortex. Static per object, so no rung recolours anything per frame.
+        /// </summary>
+        public static int PaletteIndex(int index, float3 restPosition, in FieldParams parameters)
         {
-            return (int)(((uint)index * PaletteHashMultiplier) >> 28);
+            float radial = math.length(restPosition.xz) / math.max(parameters.FieldExtent * 0.5f, 1e-3f);
+            int band = (int)math.floor(math.saturate(1f - radial) * (PaletteSize - 3) + 0.5f);
+            int jitter = (int)(((uint)index * PaletteHashMultiplier) >> 30);
+            return math.min(band + jitter, PaletteSize - 1);
         }
         #endregion
 
@@ -153,7 +202,11 @@ namespace MillionObjects
             displacement += velocity * deltaTime;
         }
 
-        /// <summary>Push force on a point from the attractor sphere, falling off linearly to its radius.</summary>
+        /// <summary>
+        /// Push force on a point from the attractor sphere, falling off linearly to its radius. The
+        /// force scales with the radius, so <paramref name="strength"/> is "force per unit of radius":
+        /// the carved hole stays proportionally deep whether the sphere is 5 or 50 units wide.
+        /// </summary>
         private static float3 AttractorPush(float3 position, float4 attractor, float strength)
         {
             if (attractor.w <= 0f)
@@ -163,7 +216,7 @@ namespace MillionObjects
             if (distance >= attractor.w || distance < 1e-4f)
                 return float3.zero;
             float falloff = 1f - distance / attractor.w;
-            return offset / distance * (strength * falloff);
+            return offset / distance * (strength * falloff * attractor.w);
         }
         #endregion
     }

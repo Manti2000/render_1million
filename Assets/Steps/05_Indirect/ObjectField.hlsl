@@ -15,6 +15,8 @@
 #define OBJECT_FIELD_ROTATION_PHASE_STEP 0.618
 // Mirrors ObjectField.JitterFraction.
 #define OBJECT_FIELD_JITTER_FRACTION 0.35
+// Mirrors ObjectField.SwirlCoreFraction.
+#define OBJECT_FIELD_SWIRL_CORE_FRACTION 0.3
 // Local copy of pi so this file compiles inside a compute shader that includes no URP library.
 #define OBJECT_FIELD_PI 3.14159265358979323846
 
@@ -30,6 +32,10 @@ struct FieldParams
     float SpringStiffness;
     float SpringDamping;
     float AttractorStrength;
+    float FieldExtent;
+    float SwirlRadius;
+    float SwirlSpeed;
+    float SwirlDepth;
 };
 
 // Mirrors ObjectField.SideLength (cube root, rounded up, corrected for pow rounding).
@@ -103,10 +109,35 @@ float3x3 ObjectFieldRotation(uint index, float time, FieldParams parameters)
         -sinAngle, 0.0, cosAngle);
 }
 
+// Mirrors ObjectField.SwirlWeight (Lorentzian: 1 at the centre, 1/2 at the swirl radius, 1/r^2 tail).
+float ObjectFieldSwirlWeight(float3 restPosition, float swirlRadius)
+{
+    if (swirlRadius <= 0.0)
+        return 0.0;
+    return 1.0 / (1.0 + dot(restPosition.xz, restPosition.xz) / (swirlRadius * swirlRadius));
+}
+
+// Mirrors ObjectField.Swirl.
+float3 ObjectFieldSwirl(float3 restPosition, float time, FieldParams parameters)
+{
+    if (parameters.SwirlRadius <= 0.0)
+        return float3(0.0, 0.0, 0.0);
+    float2 planar = restPosition.xz;
+    float weight = ObjectFieldSwirlWeight(restPosition, parameters.SwirlRadius);
+    float core = parameters.SwirlRadius * OBJECT_FIELD_SWIRL_CORE_FRACTION;
+    float radius = length(planar);
+    float2 opened = planar * (sqrt(radius * radius + core * core) / max(radius, 1e-4));
+    float angle = ObjectFieldWrapAngle(time * parameters.SwirlSpeed * weight);
+    float sinAngle, cosAngle;
+    sincos(angle, sinAngle, cosAngle);
+    float2 rotated = float2(opened.x * cosAngle - opened.y * sinAngle, opened.x * sinAngle + opened.y * cosAngle);
+    return float3(rotated.x - planar.x, -parameters.SwirlDepth * weight, rotated.y - planar.y);
+}
+
 // Mirrors ObjectField.Position.
 float3 ObjectFieldPosition(float3 restPosition, float3 displacement, float time, FieldParams parameters)
 {
-    return restPosition + displacement + float3(0.0, ObjectFieldWaveHeight(restPosition, time, parameters), 0.0);
+    return restPosition + displacement + ObjectFieldSwirl(restPosition, time, parameters) + float3(0.0, ObjectFieldWaveHeight(restPosition, time, parameters), 0.0);
 }
 
 // Mirrors float4x4.TRS with a uniform scale, as used by ObjectField.LocalToWorld. Rows are written
@@ -128,10 +159,13 @@ float4x4 ObjectFieldLocalToWorld(uint index, float3 restPosition, float3 displac
     return ObjectFieldCompose(position, ObjectFieldRotation(index, time, parameters), parameters.CubeScale);
 }
 
-// Mirrors ObjectField.PaletteIndex.
-uint ObjectFieldPaletteIndex(uint index)
+// Mirrors ObjectField.PaletteIndex: radial ramp from the cloud's edge to its centre plus 0-3 slots of hashed jitter.
+uint ObjectFieldPaletteIndex(uint index, float3 restPosition, float fieldExtent)
 {
-    return (index * OBJECT_FIELD_PALETTE_HASH_MULTIPLIER) >> 28;
+    float radial = length(restPosition.xz) / max(fieldExtent * 0.5, 1e-3);
+    uint band = (uint)floor(saturate(1.0 - radial) * (OBJECT_FIELD_PALETTE_SIZE - 3) + 0.5);
+    uint jitter = (index * OBJECT_FIELD_PALETTE_HASH_MULTIPLIER) >> 30;
+    return min(band + jitter, (uint)(OBJECT_FIELD_PALETTE_SIZE - 1));
 }
 
 // Mirrors ObjectField.AttractorPush. Written without early returns so every path initialises the
@@ -142,7 +176,7 @@ float3 ObjectFieldAttractorPush(float3 position, float4 attractor, float strengt
     float distanceToCentre = length(offset);
     bool inactive = attractor.w <= 0.0 || distanceToCentre >= attractor.w || distanceToCentre < 1e-4;
     float falloff = 1.0 - distanceToCentre / max(attractor.w, 1e-4);
-    float3 push = offset / max(distanceToCentre, 1e-4) * (strength * falloff);
+    float3 push = offset / max(distanceToCentre, 1e-4) * (strength * falloff * attractor.w);   // force per unit radius, as in C#
     return inactive ? float3(0.0, 0.0, 0.0) : push;
 }
 

@@ -59,7 +59,7 @@ namespace MillionObjects.Steps
                 Debug.LogError($"[{DisplayName}] Field settings are missing the cube mesh or the cube material; nothing spawned.");
                 return;
             }
-            _fieldParams = Settings.ToParams();
+            _fieldParams = Settings.ToParams(count);
             _paletteMaterials = new PaletteMaterialSet(Settings);
             AllocateObjectState(count);
             BuildCubes(count);
@@ -135,7 +135,7 @@ namespace MillionObjects.Steps
             // New and instantiated objects land in the active scene, which is Bootstrap. Moving them
             // into the step scene keeps unloading that scene the safety net for anything left behind.
             SceneManager.MoveGameObjectToScene(cube.gameObject, gameObject.scene);
-            cube.sharedMaterial = _paletteMaterials[ObjectField.PaletteIndex(index)];
+            cube.sharedMaterial = _paletteMaterials[ObjectField.PaletteIndex(index, _restPositions[index], in _fieldParams)];
             _renderers[index] = cube;
             _transforms.Add(cube.transform);
         }

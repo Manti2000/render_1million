@@ -23,7 +23,15 @@ namespace MillionObjects
         public float SpringStiffness;
         /// <summary>Velocity damping of the spring-back motion.</summary>
         public float SpringDamping;
-        /// <summary>Peak push force the attractor sphere applies at its centre.</summary>
+        /// <summary>Push force of the attractor sphere at its centre, per unit of its radius.</summary>
         public float AttractorStrength;
+        /// <summary>Edge length of the cloud in world units, for effects that scale with the field.</summary>
+        public float FieldExtent;
+        /// <summary>Radius at which the whirlpool's angular speed has halved, in world units; zero or less disables it.</summary>
+        public float SwirlRadius;
+        /// <summary>Angular speed of the whirlpool at its centre, in radians per second.</summary>
+        public float SwirlSpeed;
+        /// <summary>Depth of the funnel dip at the whirlpool's centre, in world units.</summary>
+        public float SwirlDepth;
     }
 }

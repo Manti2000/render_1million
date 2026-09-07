@@ -24,6 +24,10 @@ Shader "MillionObjects/WaveCubeIndirect"
         // an indirect draw is not SRP Batcher material, so there is no cbuffer to be compatible with.
         StructuredBuffer<float4x4> _LocalToWorld;
         StructuredBuffer<uint> _PaletteOverride;
+        // Enough of the field layout to recompute an object's rest position for its palette band.
+        uint _Side;
+        float _Spacing;
+        float _FieldExtent;
         // Palette as a buffer rather than a float4[16] uniform: material array properties are dropped by
         // Unity at runtime, which rendered every cube black a few seconds after spawning.
         StructuredBuffer<float4> _Palette;
@@ -39,7 +43,8 @@ Shader "MillionObjects/WaveCubeIndirect"
         {
             float4 positionCS : SV_POSITION;
             float3 normalWS : TEXCOORD0;
-            nointerpolation uint instanceID : TEXCOORD1;
+            float3 positionWS : TEXCOORD1;
+            nointerpolation uint instanceID : TEXCOORD2;
         };
 
         // Shared by all three passes so depth, normals and colour agree on where a cube is.
@@ -51,6 +56,7 @@ Shader "MillionObjects/WaveCubeIndirect"
 
             Varyings output;
             float3 positionWS = mul(localToWorld, float4(input.positionOS.xyz, 1.0)).xyz;
+            output.positionWS = positionWS;
             output.positionCS = TransformWorldToHClip(positionWS);
             // The matrix carries a uniform scale, so normalizing the rotated normal is enough; no
             // inverse transpose is needed.
@@ -63,7 +69,7 @@ Shader "MillionObjects/WaveCubeIndirect"
         half3 SampleAlbedo(uint instanceID)
         {
             uint slot = _PaletteOverride[instanceID];
-            uint palette = slot != 0 ? slot - 1 : ObjectFieldPaletteIndex(instanceID);
+            uint palette = slot != 0 ? slot - 1 : ObjectFieldPaletteIndex(instanceID, ObjectFieldRestPosition(instanceID, _Side, _Spacing), _FieldExtent);
             return (half3)_Palette[palette].rgb;
         }
         ENDHLSL
@@ -83,7 +89,7 @@ Shader "MillionObjects/WaveCubeIndirect"
 
             half4 FragForward(Varyings input) : SV_Target
             {
-                return half4(ShadeCube(input.normalWS, SampleAlbedo(input.instanceID)), 1.0);
+                return half4(ShadeCube(input.normalWS, input.positionWS, SampleAlbedo(input.instanceID)), 1.0);
             }
             ENDHLSL
         }

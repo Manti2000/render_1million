@@ -32,6 +32,10 @@ float _RotationSpeed;
 float _SpringStiffness;
 float _SpringDamping;
 float _AttractorStrength;
+float _FieldExtent;
+float _SwirlRadius;
+float _SwirlSpeed;
+float _SwirlDepth;
 
 // Packs the loose uniforms into the struct the shared maths takes.
 FieldParams LoadFieldParams()
@@ -46,6 +50,10 @@ FieldParams LoadFieldParams()
     parameters.SpringStiffness = _SpringStiffness;
     parameters.SpringDamping = _SpringDamping;
     parameters.AttractorStrength = _AttractorStrength;
+    parameters.FieldExtent = _FieldExtent;
+    parameters.SwirlRadius = _SwirlRadius;
+    parameters.SwirlSpeed = _SwirlSpeed;
+    parameters.SwirlDepth = _SwirlDepth;
     return parameters;
 }
 

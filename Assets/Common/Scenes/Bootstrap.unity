@@ -414,7 +414,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MillionObjects.Common::MillionObjects.ObjectPicker
   _switcher: {fileID: 1285120974}
   _camera: {fileID: 1569790811}
-  _highlightPaletteIndex: 0
+  _highlightPaletteIndex: 15
 --- !u!114 &1285120979
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -429,7 +429,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MillionObjects.Common::MillionObjects.Attractor
   _switcher: {fileID: 1285120974}
   _visual: {fileID: 667488669}
-  _radius: 8
+  _radiusFraction: 0.12
+  _minRadius: 4
+  _markerSize: 2
   _verticalSweep: 0.6
   _sweepSeconds: 12
   _enabledAtStart: 0
@@ -448,6 +450,7 @@ MonoBehaviour:
   _switcher: {fileID: 1285120974}
   _cameraRig: {fileID: 1569790810}
   _attractor: {fileID: 1285120979}
+  _shadeFloor: 0.2
 --- !u!4 &1285120981
 Transform:
   m_ObjectHideFlags: 0
@@ -570,10 +573,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: MillionObjects.Common::MillionObjects.CameraRig
   _pullBackSeconds: 14
   _orbitDegreesPerSecond: 5
-  _startHeight: 2.5
   _startDistanceFactor: 0.08
-  _endHeightFactor: 0.9
-  _endDistanceFactor: 1.1
+  _startElevationDegrees: 82
+  _elevationDegrees: 61
+  _fitMargin: 1.05
 --- !u!20 &1569790811
 Camera:
   m_ObjectHideFlags: 0

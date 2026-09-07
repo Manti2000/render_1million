@@ -39,6 +39,7 @@ Shader "MillionObjects/WaveCube"
         {
             float4 positionCS : SV_POSITION;
             float3 normalWS : TEXCOORD0;
+            float3 positionWS : TEXCOORD1;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
 
@@ -47,7 +48,8 @@ Shader "MillionObjects/WaveCube"
             Varyings output;
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
-            output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+            output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
+            output.positionCS = TransformWorldToHClip(output.positionWS);
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             return output;
         }
@@ -78,7 +80,7 @@ Shader "MillionObjects/WaveCube"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 half4 baseColor = SampleBaseColor();
-                return half4(ShadeCube(input.normalWS, baseColor.rgb), 1.0);
+                return half4(ShadeCube(input.normalWS, input.positionWS, baseColor.rgb), 1.0);
             }
             ENDHLSL
         }

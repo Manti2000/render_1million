@@ -17,7 +17,7 @@ namespace MillionObjects
         [SerializeField, Tooltip("Camera the click ray is cast from.")]
         private Camera _camera;
         [SerializeField, Tooltip("Palette slot picked cubes are recoloured to.")]
-        private int _highlightPaletteIndex = 0;
+        private int _highlightPaletteIndex = 15;   // white: the foam colour, visible anywhere in the blue cloud
         #endregion
 
         #region Events
@@ -49,7 +49,7 @@ namespace MillionObjects
         /// <summary>First object along the click ray, or -1 when the ray misses the cloud.</summary>
         private int IndexUnder(Vector2 screenPosition, ObjectBackend backend)
         {
-            var parameters = backend.Settings.ToParams();
+            var parameters = backend.Settings.ToParams(backend.Count);
             var ray = _camera.ScreenPointToRay(screenPosition);
             var bounds = ObjectField.FieldBounds(backend.Count, parameters);
             if (!bounds.IntersectRay(ray, out float entry))
