@@ -8,13 +8,15 @@ namespace MillionObjects.Benchmark
 {
     /// <summary>
     /// Fixed display state for benchmark and recording runs: vsync off, uncapped frame rate, render
-    /// scale 1, and 1080p on PC or the Steam Deck's native 800p. Not a like-for-like pixel comparison,
-    /// but the realistic one; the report records the resolution used.
+    /// scale 1, and a 1920-wide frame at the display's own aspect on PC (1920x1200 on 16:10 laptops,
+    /// 1920x1080 on 16:9) or the Steam Deck's native 800p. Matching the display aspect keeps the image
+    /// unskewed and, since the Deck is 16:10 too, frames the cloud identically on every device. Not a
+    /// like-for-like pixel comparison, but the realistic one; the report records the resolution used.
     /// </summary>
     public static class DisplayMode
     {
         #region Constants
-        private static readonly int2 PcResolution = new int2(1920, 1080);
+        private const int PcWidth = 1920;
         private static readonly int2 SteamDeckResolution = new int2(1280, 800);
         #endregion
 
@@ -36,7 +38,7 @@ namespace MillionObjects.Benchmark
         {
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = -1;
-            int2 resolution = requested ?? (IsSteamDeck ? SteamDeckResolution : PcResolution);
+            int2 resolution = requested ?? (IsSteamDeck ? SteamDeckResolution : PcResolutionForDisplay());
             Screen.SetResolution(resolution.x, resolution.y, FullScreenMode.FullScreenWindow);
             ApplyRenderScale(1f);
         }
@@ -53,6 +55,15 @@ namespace MillionObjects.Benchmark
         #endregion
 
         #region Helpers
+        /// <summary>1920 wide at the desktop's aspect ratio, rounded to an even height, so the fullscreen window is never stretched.</summary>
+        private static int2 PcResolutionForDisplay()
+        {
+            Resolution desktop = Screen.currentResolution;
+            float aspect = desktop.height > 0 ? (float)desktop.width / desktop.height : 16f / 9f;
+            int height = Mathf.RoundToInt(PcWidth / aspect / 2f) * 2;
+            return new int2(PcWidth, height);
+        }
+
         /// <summary>Forces the active URP asset's render scale so upscaling cannot change the pixel count.</summary>
         private static void ApplyRenderScale(float scale)
         {
