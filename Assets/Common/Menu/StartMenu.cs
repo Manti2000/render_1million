@@ -45,6 +45,7 @@ namespace MillionObjects
         private void Awake()
         {
             _switcher.SuppressAutoLoad();
+            DisplayMode.UncapFrameRate();
         }
 
         private void OnEnable()

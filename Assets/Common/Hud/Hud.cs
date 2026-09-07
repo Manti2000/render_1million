@@ -148,7 +148,7 @@ namespace MillionObjects
             _fps.text = sample.FrameMs > 0f ? $"{1000f / sample.FrameMs:F0} fps" : "-";
             _mainMs.text = $"{sample.MainThreadMs:F1} ms";
             _renderMs.text = $"{sample.RenderThreadMs:F1} ms";
-            _gpuMs.text = $"{sample.GpuMs:F1} ms";
+            _gpuMs.text = sample.GpuMs > 0f ? $"{sample.GpuMs:F1} ms" : "n/a";   // FrameTimingManager reports 0 where the driver gives no GPU timing
             _drawCalls.text = _sampler != null && _sampler.DrawCalls >= 0 ? _sampler.DrawCalls.ToString("N0") : "n/a";
             _memory.text = _sampler != null && _sampler.MemoryMb >= 0f ? $"{_sampler.MemoryMb:N0} MB" : "n/a";
             _clock.text = FormatClock(Time.realtimeSinceStartup);

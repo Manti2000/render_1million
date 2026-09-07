@@ -33,11 +33,17 @@ namespace MillionObjects.Benchmark
         #endregion
 
         #region Public interface
-        /// <summary>Applies the fixed display state, using <paramref name="requested"/> or the per-device default resolution.</summary>
-        public static void Apply(int2? requested)
+        /// <summary>Uncaps the frame rate so the HUD shows real frame times instead of the display's refresh interval. Interactive mode calls this at start.</summary>
+        public static void UncapFrameRate()
         {
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = -1;
+        }
+
+        /// <summary>Applies the fixed display state, using <paramref name="requested"/> or the per-device default resolution.</summary>
+        public static void Apply(int2? requested)
+        {
+            UncapFrameRate();
             int2 resolution = requested ?? (IsSteamDeck ? SteamDeckResolution : PcResolutionForDisplay());
             Screen.SetResolution(resolution.x, resolution.y, FullScreenMode.FullScreenWindow);
             ApplyRenderScale(1f);

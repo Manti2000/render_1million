@@ -98,6 +98,15 @@ namespace MillionObjects.Benchmark
             return window;
         }
 
+        /// <summary>Each draw call counter with its latest value, for checking which render paths a step actually uses.</summary>
+        public string DescribeDrawCalls()
+        {
+            var builder = new System.Text.StringBuilder();
+            for (int i = 0; i < _drawCallRecorders.Length; i++)
+                builder.Append(DrawCallCounterNames[i]).Append('=').Append(_drawCallRecorders[i].Valid ? _drawCallRecorders[i].LastValue.ToString() : "n/a").Append("; ");
+            return builder.ToString();
+        }
+
         /// <summary>Frame time from the history ring, index 0 oldest to <see cref="HistoryLength"/> - 1 newest.</summary>
         public float HistoryAt(int index)
         {

@@ -3,6 +3,9 @@
     position: absolute;
     top: 24px;
     left: 24px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background-color: rgba(5, 8, 16, 0.62);
     flex-direction: column;
     -unity-font-style: bold;
     color: rgb(240, 240, 240);
