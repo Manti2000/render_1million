@@ -80,6 +80,19 @@ namespace MillionObjects
         }
 
         /// <summary>
+        /// Applies edited settings to a live field. Backends that can update in place do so; the others
+        /// rebuild at the current count, which is cheap for the GPU-driven steps and slow for GameObjects.
+        /// </summary>
+        public void RefreshSettings()
+        {
+            if (Count == 0 || Settings == null)
+                return;
+            FieldParams fresh = Settings.ToParams(Count);
+            if (!TryApplySettings(in fresh))
+                Spawn(Count);
+        }
+
+        /// <summary>
         /// Flexibility demo: recolours one object to a palette slot. Returns false when the backend
         /// does not support it or the index is out of range.
         /// </summary>
@@ -90,6 +103,16 @@ namespace MillionObjects
         #endregion
 
         #region Backend responsibilities
+        /// <summary>
+        /// Applies new parameters and palette colours to the live field without rebuilding it. Return
+        /// false when the change needs a rebuild (layout or scale) or the backend does not support live
+        /// updates; the base then respawns. Default: always rebuild.
+        /// </summary>
+        protected virtual bool TryApplySettings(in FieldParams parameters)
+        {
+            return false;
+        }
+
         /// <summary>Creates <paramref name="count"/> objects on the shared grid layout. Called with an empty field.</summary>
         protected abstract void SpawnObjects(int count);
         /// <summary>Destroys all objects and frees native memory, GPU buffers and material instances.</summary>

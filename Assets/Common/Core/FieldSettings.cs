@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MillionObjects
@@ -47,8 +48,10 @@ namespace MillionObjects
         private Mesh _cubeMesh;
         [SerializeField, Tooltip("Material using the MillionObjects/WaveCube shader. Backends derive palette variants from it.")]
         private Material _cubeMaterial;
-        [SerializeField, Tooltip("Exactly 16 colours; each object picks one by hashing its index.")]
-        private Color[] _palette = new Color[ObjectField.PaletteSize];
+        [SerializeField, Tooltip("Colour ramp of the first hue from the cloud's edge (t = 0) to the whirlpool's eye (t = 1). Sampled at 32 levels.")]
+        private Gradient _edgeToEyeHueA = DefaultGradient("#0a2660", "#2e8fdc", "#ffffff");
+        [SerializeField, Tooltip("Colour ramp of the second hue, used on alternating azimuth sectors so the vortex shear shows as spiral arms.")]
+        private Gradient _edgeToEyeHueB = DefaultGradient("#0b4a55", "#2cbfc6", "#ffffff");
         #endregion
 
         #region Public properties
@@ -56,8 +59,20 @@ namespace MillionObjects
         public Mesh CubeMesh => _cubeMesh;
         /// <summary>Base material every backend derives its variants from.</summary>
         public Material CubeMaterial => _cubeMaterial;
-        /// <summary>The 16-entry colour palette.</summary>
-        public Color[] Palette => _palette;
+        #endregion
+
+        #region Events
+        /// <summary>Raised when a value is edited in the Inspector, so a running field can rebuild itself with the new settings.</summary>
+        public event Action Changed;
+        #endregion
+
+        #region Lifecycle
+#if UNITY_EDITOR   // OnValidate only exists in the Editor; players never edit settings at runtime
+        private void OnValidate()
+        {
+            Changed?.Invoke();
+        }
+#endif
         #endregion
 
         #region Public interface
@@ -83,12 +98,34 @@ namespace MillionObjects
             };
         }
 
-        /// <summary>Palette colour for a palette index, wrapping out-of-range values.</summary>
+        /// <summary>
+        /// Palette colour for a slot: even slots sample the first hue's gradient, odd slots the second,
+        /// at the slot's brightness level. Out-of-range slots wrap. See <see cref="ObjectField.PaletteIndex"/>.
+        /// </summary>
         public Color PaletteColor(int paletteIndex)
         {
-            if (_palette == null || _palette.Length == 0)
-                return Color.white;
-            return _palette[((paletteIndex % _palette.Length) + _palette.Length) % _palette.Length];
+            int slot = ((paletteIndex % ObjectField.PaletteSize) + ObjectField.PaletteSize) % ObjectField.PaletteSize;
+            Gradient gradient = (slot & 1) == 0 ? _edgeToEyeHueA : _edgeToEyeHueB;
+            float t = (slot >> 1) / (float)(ObjectField.PaletteLevels - 1);
+            return gradient != null ? gradient.Evaluate(t) : Color.white;
+        }
+        #endregion
+
+        #region Defaults
+        /// <summary>Three-stop gradient from hex colours, used as the code default before the asset is tuned in the Inspector.</summary>
+        private static Gradient DefaultGradient(string edge, string middle, string eye)
+        {
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new[] { new GradientColorKey(Parse(edge), 0f), new GradientColorKey(Parse(middle), 0.55f), new GradientColorKey(Parse(eye), 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) });
+            return gradient;
+        }
+
+        /// <summary>Hex colour to Color; white when the string does not parse.</summary>
+        private static Color Parse(string hex)
+        {
+            return ColorUtility.TryParseHtmlString(hex, out Color color) ? color : Color.white;
         }
         #endregion
     }

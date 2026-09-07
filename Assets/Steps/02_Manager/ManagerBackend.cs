@@ -27,7 +27,7 @@ namespace MillionObjects.Steps
         #endregion
 
         #region Private fields
-        private PaletteMaterialSet _paletteMaterials;      // 16 material instances, one per palette slot
+        private PaletteMaterialSet _paletteMaterials;      // one material instance per palette slot
         private MeshRenderer[] _renderers;                 // the field itself: recolouring and despawn both go through it
         private TransformAccessArray _transforms;          // job-side view of every cube Transform
         private NativeArray<float3> _restPositions;        // grid position the wave and the spring ride on
@@ -51,6 +51,16 @@ namespace MillionObjects.Steps
         #endregion
 
         #region Backend responsibilities
+        /// <summary>Motion numbers and palette colours update in place; spacing or cube scale changes rebuild, since both are baked into the transforms.</summary>
+        protected override bool TryApplySettings(in FieldParams parameters)
+        {
+            if (parameters.Spacing != _fieldParams.Spacing || parameters.CubeScale != _fieldParams.CubeScale)
+                return false;
+            _fieldParams = parameters;
+            _paletteMaterials?.UpdateColors(Settings);
+            return true;
+        }
+
         /// <summary>Allocates the per-object arrays, builds the cube field and places it at time zero.</summary>
         protected override void SpawnObjects(int count)
         {

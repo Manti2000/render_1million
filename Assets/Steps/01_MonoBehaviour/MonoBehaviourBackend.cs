@@ -27,12 +27,22 @@ namespace MillionObjects.Steps.MonoBehaviourStep
 
         #region Private fields
         private Transform _fieldRoot;               // flat parent of every spawned cube, destroyed as one on despawn
-        private PaletteMaterialSet _palette;        // 16 material instances owned by this backend
+        private PaletteMaterialSet _palette;        // one material instance per palette slot, owned by this backend
         private MeshRenderer[] _renderers;          // one per object, kept so a single cube can be recoloured
         private FieldParams _fieldParameters;       // cached once per spawn, never rebuilt per object or per frame
         #endregion
 
         #region Backend responsibilities
+        /// <summary>Motion numbers and palette colours update in place; spacing or cube scale changes rebuild, since both are baked into the transforms.</summary>
+        protected override bool TryApplySettings(in FieldParams parameters)
+        {
+            if (parameters.Spacing != _fieldParameters.Spacing || parameters.CubeScale != _fieldParameters.CubeScale)
+                return false;
+            _fieldParameters = parameters;
+            _palette?.UpdateColors(Settings);
+            return true;
+        }
+
         /// <summary>Builds the field: one palette set, one template cube, then a clone per object.</summary>
         protected override void SpawnObjects(int count)
         {

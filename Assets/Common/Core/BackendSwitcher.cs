@@ -46,6 +46,8 @@ namespace MillionObjects
         #region Events
         /// <summary>Raised after a step scene finished loading and its backend was initialised.</summary>
         public event Action<ObjectBackend> StepLoaded;
+        /// <summary>Raised after the active field was rebuilt in place because its settings changed; framing refreshes, the camera does not restart.</summary>
+        public event Action<ObjectBackend> FieldRebuilt;
         #endregion
 
         #region Private fields
@@ -62,6 +64,18 @@ namespace MillionObjects
         {
             if (_loadFirstStepOnStart && _catalog != null && _catalog.Steps.Count > 0)
                 LoadStep(0, true);
+        }
+
+        private void OnEnable()
+        {
+            if (_settings != null)
+                _settings.Changed += RespawnWithNewSettings;
+        }
+
+        private void OnDisable()
+        {
+            if (_settings != null)
+                _settings.Changed -= RespawnWithNewSettings;
         }
 
         private void Update()
@@ -102,6 +116,15 @@ namespace MillionObjects
             if (IsLoading)
                 return null;
             return StartCoroutine(UnloadStepRoutine());
+        }
+
+        /// <summary>Pushes edited settings into the active field so they take effect live; a no-op outside play mode or while loading.</summary>
+        private void RespawnWithNewSettings()
+        {
+            if (!Application.isPlaying || IsLoading || Active == null || Active.Count == 0)
+                return;
+            Active.RefreshSettings();
+            FieldRebuilt?.Invoke(Active);
         }
 
         /// <summary>Respawns the active backend with <see cref="SpawnCount"/> objects.</summary>

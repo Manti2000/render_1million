@@ -31,14 +31,18 @@ namespace MillionObjects
         #region Lifecycle
         private void OnEnable()
         {
-            if (_switcher != null)
-                _switcher.StepLoaded += OnStepLoaded;
+            if (_switcher == null)
+                return;
+            _switcher.StepLoaded += OnStepLoaded;
+            _switcher.FieldRebuilt += OnFieldRebuilt;
         }
 
         private void OnDisable()
         {
-            if (_switcher != null)
-                _switcher.StepLoaded -= OnStepLoaded;
+            if (_switcher == null)
+                return;
+            _switcher.StepLoaded -= OnStepLoaded;
+            _switcher.FieldRebuilt -= OnFieldRebuilt;
         }
 
         private void Update()
@@ -68,6 +72,13 @@ namespace MillionObjects
             Shader.SetGlobalFloat(ShadeTopId, framing.max.y);
             Shader.SetGlobalFloat(ShadeBottomId, full.min.y);
             Shader.SetGlobalFloat(ShadeFloorId, _shadeFloor);
+        }
+
+        /// <summary>Reframes after a live settings edit without rewinding the camera, so values can be tuned while watching.</summary>
+        private void OnFieldRebuilt(ObjectBackend backend)
+        {
+            if (backend != null)
+                Reframe(backend.Count);
         }
 
         /// <summary>Recomputes the field bounds for a count and applies them to camera and attractor.</summary>
