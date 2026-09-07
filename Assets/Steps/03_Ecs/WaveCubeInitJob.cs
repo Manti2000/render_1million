@@ -20,8 +20,8 @@ namespace MillionObjects.Steps.Ecs
         #region Public fields
         /// <summary>Handle used to read the entity of each cube back out of the chunk.</summary>
         [ReadOnly] public EntityTypeHandle EntityTypeHandle;
-        /// <summary>Transform written at the rest pose, with the shared uniform cube scale.</summary>
-        public ComponentTypeHandle<LocalTransform> TransformTypeHandle;
+        /// <summary>Render matrix written at the rest pose so the first frame already shows a valid cube.</summary>
+        public ComponentTypeHandle<LocalToWorld> LocalToWorldTypeHandle;
         /// <summary>Per-cube simulation state written from the object index.</summary>
         public ComponentTypeHandle<WaveCubeState> StateTypeHandle;
         /// <summary>Per-entity override of the shader's _BaseColor property.</summary>
@@ -43,7 +43,7 @@ namespace MillionObjects.Steps.Ecs
         public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
         {
             NativeArray<Entity> entities = chunk.GetNativeArray(EntityTypeHandle);
-            NativeArray<LocalTransform> transforms = chunk.GetNativeArray(ref TransformTypeHandle);
+            NativeArray<LocalToWorld> matrices = chunk.GetNativeArray(ref LocalToWorldTypeHandle);
             NativeArray<WaveCubeState> states = chunk.GetNativeArray(ref StateTypeHandle);
             NativeArray<URPMaterialPropertyBaseColor> baseColors = chunk.GetNativeArray(ref BaseColorTypeHandle);
             int firstIndexInChunk = ChunkBaseEntityIndices[unfilteredChunkIndex];
@@ -54,9 +54,9 @@ namespace MillionObjects.Steps.Ecs
                 int index = firstIndexInChunk + matched++;
                 float3 rest = ObjectField.RestPosition(index, SideLength, Params.Spacing);
                 EntitiesByIndex[index] = entities[entityIndexInChunk];
-                transforms[entityIndexInChunk] = LocalTransform.FromPositionRotationScale(rest, quaternion.identity, Params.CubeScale);
+                matrices[entityIndexInChunk] = new LocalToWorld { Value = ObjectField.LocalToWorld(index, rest, float3.zero, 0f, in Params) };
                 states[entityIndexInChunk] = new WaveCubeState { Index = index, RestPosition = rest };
-                baseColors[entityIndexInChunk] = new URPMaterialPropertyBaseColor { Value = PaletteColors[ObjectField.PaletteIndex(index)] };
+                baseColors[entityIndexInChunk] = new URPMaterialPropertyBaseColor { Value = PaletteColors[ObjectField.PaletteIndex(index, rest, in Params)] };
             }
         }
         #endregion

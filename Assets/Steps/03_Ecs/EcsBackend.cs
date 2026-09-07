@@ -122,7 +122,7 @@ namespace MillionObjects.Steps.Ecs
             var description = new RenderMeshDescription(ShadowCastingMode.Off, receiveShadows: false);
             var renderMeshArray = new RenderMeshArray(new[] { Settings.CubeMaterial }, new[] { Settings.CubeMesh });
             RenderMeshUtility.AddComponents(prototype, entityManager, description, renderMeshArray, MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0));
-            entityManager.AddComponent<LocalTransform>(prototype);
+            entityManager.AddComponent<LocalToWorld>(prototype);   // written by our job directly; no LocalTransform, so the transform system stays idle
             entityManager.AddComponent<URPMaterialPropertyBaseColor>(prototype);
             entityManager.AddComponent<WaveCubeState>(prototype);
             return prototype;
@@ -141,19 +141,19 @@ namespace MillionObjects.Steps.Ecs
         /// <summary>Runs the Burst init job that gives every cube its grid identity, colour and rest pose.</summary>
         private void InitializeCubes(EntityManager entityManager, int count)
         {
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadWrite<WaveCubeState>(), ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadWrite<URPMaterialPropertyBaseColor>());
+            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadWrite<WaveCubeState>(), ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadWrite<URPMaterialPropertyBaseColor>());
             NativeArray<int> chunkBaseEntityIndices = query.CalculateBaseEntityIndexArray(Allocator.TempJob);
             var job = new WaveCubeInitJob
             {
                 EntityTypeHandle = entityManager.GetEntityTypeHandle(),
-                TransformTypeHandle = entityManager.GetComponentTypeHandle<LocalTransform>(false),
+                LocalToWorldTypeHandle = entityManager.GetComponentTypeHandle<LocalToWorld>(false),
                 StateTypeHandle = entityManager.GetComponentTypeHandle<WaveCubeState>(false),
                 BaseColorTypeHandle = entityManager.GetComponentTypeHandle<URPMaterialPropertyBaseColor>(false),
                 ChunkBaseEntityIndices = chunkBaseEntityIndices,
                 PaletteColors = _paletteColors,
                 EntitiesByIndex = _entities,
                 SideLength = ObjectField.SideLength(count),
-                Params = Settings.ToParams(),
+                Params = Settings.ToParams(count),
             };
             job.ScheduleParallel(query, default).Complete();
             chunkBaseEntityIndices.Dispose();
@@ -213,7 +213,7 @@ namespace MillionObjects.Steps.Ecs
                 Time = time,
                 DeltaTime = deltaTime,
                 Attractor = Attractor,
-                Params = Settings.ToParams(),
+                Params = Settings.ToParams(Count),
             };
         }
         #endregion

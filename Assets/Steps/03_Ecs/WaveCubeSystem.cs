@@ -11,7 +11,6 @@ namespace MillionObjects.Steps.Ecs
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateBefore(typeof(TransformSystemGroup))]
     public partial struct WaveCubeSystem : ISystem
     {
         #region Lifecycle
