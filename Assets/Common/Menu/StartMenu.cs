@@ -35,7 +35,7 @@ namespace MillionObjects
         #region Private fields
         private VisualElement _root;
         private VisualElement _countButtons;
-        private Button _back;                  // corner button shown while a step runs by hand
+        private VisualElement _corner;         // corner buttons shown while a step runs by hand: HUD toggle and back
         private Label _status;
         private int _selectedCount = 10_000;   // count applied when a step is started from the menu
         private bool _automaticRunActive;      // benchmark or recording in progress; Escape is ignored
@@ -52,8 +52,9 @@ namespace MillionObjects
         {
             _root = _document.rootVisualElement.Q<VisualElement>("menu");
             _status = _root.Q<Label>("status");
-            _back = _document.rootVisualElement.Q<Button>("back");
-            _back.clicked += Show;
+            _corner = _document.rootVisualElement.Q<VisualElement>("corner");
+            _document.rootVisualElement.Q<Button>("back").clicked += Show;
+            _document.rootVisualElement.Q<Button>("hud-toggle").clicked += ToggleHud;
             BuildStepButtons(_root.Q<VisualElement>("steps"));
             BuildCountButtons(_root.Q<VisualElement>("counts"));
             BindAutomaticButtons();
@@ -183,11 +184,18 @@ namespace MillionObjects
             _director.StartRun(BenchmarkArgs.ForManualRun(false));
         }
 
-        /// <summary>Toggles the corner back button; hidden in the menu and during automatic runs.</summary>
+        /// <summary>Toggles the corner buttons; hidden in the menu and during automatic runs.</summary>
         private void ShowBackButton(bool visible)
         {
-            if (_back != null)
-                _back.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_corner != null)
+                _corner.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>Shows or hides the stats overlay so the cloud can be viewed unobstructed.</summary>
+        private void ToggleHud()
+        {
+            if (_hud != null)
+                _hud.Visible = !_hud.Visible;
         }
 
         /// <summary>Returns to the menu and shows where the report landed.</summary>

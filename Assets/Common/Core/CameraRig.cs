@@ -30,12 +30,14 @@ namespace MillionObjects
         /// <summary>Whether the rig advances along its path. When false the camera holds its pose.</summary>
         public bool Playing { get; set; } = true;
         /// <summary>Pull-back progress, 0 at the start pose and 1 once the wide shot is reached.</summary>
-        public float PullBackProgress => Mathf.Clamp01(_elapsed / _pullBackSeconds);
+        public float PullBackProgress => Mathf.Clamp01(_pullBackTime / _pullBackSeconds);
         #endregion
 
         #region Private fields
         private Bounds _field = new Bounds(Vector3.zero, new Vector3(50f, 5f, 50f));   // framed field, set by the mode controller
-        private float _elapsed;   // seconds since Restart, drives pull-back and orbit
+        private float _pullBackTime;      // seconds along the pull-back path, 0 to _pullBackSeconds
+        private float _orbitDegrees;      // accumulated orbit angle
+        private bool _autoPullBack = true;   // false after a manual zoom, so the camera stays where the user put it
         private Camera _camera;   // for field of view and aspect; null falls back to 60 degrees at 16:10
         private const int AzimuthSamples = 12;   // orbit angles sampled over a quarter turn for the rotation-invariant fit
         #endregion
@@ -49,7 +51,7 @@ namespace MillionObjects
         private void LateUpdate()
         {
             if (Playing)
-                _elapsed += Time.deltaTime;
+                Advance(Time.deltaTime);
             ApplyPose();
         }
         #endregion
@@ -64,26 +66,51 @@ namespace MillionObjects
         /// <summary>Rewinds the path to the start so every measurement window sees the same motion.</summary>
         public void Restart()
         {
-            _elapsed = 0f;
+            _pullBackTime = 0f;
+            _orbitDegrees = 0f;
+            _autoPullBack = true;
             ApplyPose();
         }
 
         /// <summary>Jumps straight to the wide shot, for short probes that should not spend time zooming out.</summary>
         public void SkipToWideShot()
         {
-            _elapsed = _pullBackSeconds;
+            _pullBackTime = _pullBackSeconds;
+            _orbitDegrees = 0f;
+            _autoPullBack = true;
             ApplyPose();
+        }
+
+        /// <summary>Moves along the pull-back path by hand: negative zooms in, positive zooms out, in seconds of path. Stops the automatic pull-back.</summary>
+        public void NudgePullBack(float seconds)
+        {
+            _autoPullBack = false;
+            _pullBackTime = Mathf.Clamp(_pullBackTime + seconds, 0f, _pullBackSeconds);
+        }
+
+        /// <summary>Turns the orbit by hand, in degrees; positive is the same direction as the automatic orbit.</summary>
+        public void NudgeOrbit(float degrees)
+        {
+            _orbitDegrees += degrees;
         }
         #endregion
 
         #region Path
-        /// <summary>Moves the camera to the pose for the elapsed time: eased pull-back to a distance that just fits the cloud, then a steady orbit.</summary>
+        /// <summary>Advances the automatic motion: the pull-back until it completes (unless a manual zoom took over), and the orbit forever.</summary>
+        private void Advance(float deltaTime)
+        {
+            if (_autoPullBack)
+                _pullBackTime = Mathf.Min(_pullBackTime + deltaTime, _pullBackSeconds);
+            _orbitDegrees += deltaTime * _orbitDegreesPerSecond;
+        }
+
+        /// <summary>Moves the camera to the pose for the current pull-back and orbit: eased pull-back to a distance that just fits the cloud, then a steady orbit.</summary>
         private void ApplyPose()
         {
             float pullBack = Mathf.SmoothStep(0f, 1f, PullBackProgress);
             float extent = Mathf.Max(_field.extents.x, Mathf.Max(_field.extents.y, _field.extents.z)) * 2f;
             float elevation = Mathf.Lerp(_startElevationDegrees, _elevationDegrees, pullBack) * Mathf.Deg2Rad;
-            float azimuth = _elapsed * _orbitDegreesPerSecond * Mathf.Deg2Rad;
+            float azimuth = _orbitDegrees * Mathf.Deg2Rad;
             Vector3 direction = new Vector3(Mathf.Sin(azimuth) * Mathf.Cos(elevation), Mathf.Sin(elevation), -Mathf.Cos(azimuth) * Mathf.Cos(elevation));
             float distance = Mathf.Lerp(extent * _startDistanceFactor, FitDistance(elevation), pullBack);
             transform.position = _field.center + direction * distance;

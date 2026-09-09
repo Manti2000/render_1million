@@ -98,10 +98,15 @@
     color: rgb(120, 140, 180);
 }
 
-.back {
+.corner {
     position: absolute;
     right: 24px;
     top: 24px;
+    flex-direction: row;
+}
+
+.back {
+    margin-left: 10px;
     font-size: 22px;
     padding: 8px 16px;
     background-color: rgba(34, 42, 64, 0.85);

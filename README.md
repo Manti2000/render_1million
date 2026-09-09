@@ -26,12 +26,14 @@ Open `Assets/Common/Scenes/Bootstrap.unity` and press Play. A start menu lets yo
 |---|---|
 | `Esc` or the corner button | Back to the menu |
 | `1` to `5` | Load a step |
-| `Up` / `Down` | Multiply or divide the object count by ten and respawn |
+| `+` / `-` | Multiply or divide the object count by ten and respawn |
+| `Up` / `Down` | Zoom in and out along the camera path |
+| `Left` / `Right` | Orbit the camera |
 | `R` | Respawn |
 | `A` | Toggle the attractor sphere (pushes cubes, they spring back) |
 | `Left click` | Recolour the cube under the cursor |
 | `C` | Pause or resume the camera path |
-| `H` | Toggle the HUD |
+| `H` or the corner button | Toggle the HUD |
 | `Space` | Freeze the field |
 
 ## Benchmarking

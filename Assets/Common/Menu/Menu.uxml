@@ -1,6 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="Menu.uss" />
-    <ui:Button name="back" text="◂  Menu  (Esc)" class="back" />
+    <ui:VisualElement name="corner" class="corner">
+        <ui:Button name="hud-toggle" text="HUD  (H)" class="back" />
+        <ui:Button name="back" text="◂  Menu  (Esc)" class="back" />
+    </ui:VisualElement>
     <ui:VisualElement name="menu" class="menu">
         <ui:VisualElement class="panel">
             <ui:Label text="Million Objects" class="title" />
@@ -16,7 +19,7 @@
                 <ui:Button name="record" text="Recording script" class="button auto" />
             </ui:VisualElement>
             <ui:Label name="status" text="" class="status" />
-            <ui:Label text="Esc returns here · 1-5 switch step · Up/Down count · A attractor · click recolours · H HUD · Space freeze" class="hint" />
+            <ui:Label text="Esc returns here · 1-5 step · +/- count · ▴ ▾ zoom · ◂ ▸ orbit · A attractor · click recolours · H HUD · C camera · Space freeze" class="hint" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
