@@ -64,6 +64,12 @@ namespace MillionObjects
 
         private void Start()
         {
+            var args = BenchmarkArgs.FromCommandLine();
+            if (args.Benchmark || args.Record)
+            {
+                StayHiddenForAutomaticLaunch();
+                return;
+            }
             Show();   // after every OnEnable, so the HUD exists to be hidden
         }
 
@@ -182,6 +188,14 @@ namespace MillionObjects
             if (_hud != null)
                 _hud.Visible = true;
             _director.StartRun(BenchmarkArgs.ForManualRun(false));
+        }
+
+        /// <summary>A -benchmark or -record launch owns the screen from the first frame: the runner or the director starts itself, so the menu stays out of the way and Escape is ignored until the player quits.</summary>
+        private void StayHiddenForAutomaticLaunch()
+        {
+            _automaticRunActive = true;
+            Visible = false;
+            ShowBackButton(false);
         }
 
         /// <summary>Toggles the corner buttons; hidden in the menu and during automatic runs.</summary>
