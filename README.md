@@ -2,6 +2,8 @@
 
 Demo project for the Budapest Game Dev Day 2026 talk **"How to render 1 million objects in Unity without a hitch"**.
 
+![One million cubes in the whirlpool, step 5 (GPU indirect + compute)](Media/whirlpool_1m.jpg)
+
 Five backends render the same animated cloud of cubes: a jittered cubic lattice pulled into a whirlpool, a swirl with an open eye and a travelling wave on top. Each one is a self-contained step with its own scene and scripts, so you can read them side by side and run them against each other. The only variable between steps is the rendering architecture: same mesh, same shader, same wave, same palette, same camera.
 
 | Step | Folder | How objects are driven |
@@ -79,6 +81,7 @@ uv run Tools/plot_bench.py --out charts --png --labels "High-end laptop,Mid-rang
 Assets/Common     bootstrap scene, backend contract, shared field maths, shader, HUD, benchmark runner
 Assets/Steps      one folder per step: scene + scripts + step-only assets
 Tools             chart generator
+Media             screenshots used by this README
 ```
 
 The shared maths lives in `Assets/Common/Core/ObjectField.cs` and is mirrored line for line in `Assets/Steps/05_Indirect/ObjectField.hlsl`, which is what keeps the picture identical across steps.
