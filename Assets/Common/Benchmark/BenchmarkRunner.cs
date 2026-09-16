@@ -305,8 +305,8 @@ namespace MillionObjects.Benchmark
             result.frameMs = FrameStatistics.FrameMs(samples);
             result.mainThreadMs = FrameStatistics.Average(samples, static s => s.MainThreadMs);
             result.renderThreadMs = FrameStatistics.Average(samples, static s => s.RenderThreadMs);
-            result.gpuMs = FrameStatistics.Average(samples, static s => s.GpuMs);
-            result.drawCalls = _sampler.DrawCalls;
+            result.gpuMs = FrameStatistics.AverageWhereReported(samples, static s => s.GpuMs);   // frames without GPU timing must not dilute the mean
+            result.drawCalls = FrameStatistics.DrawCalls(samples);
             result.allocatedMb = _sampler.MemoryMb;
             result.samples = new float[samples.Count];
             for (int i = 0; i < samples.Count; i++)

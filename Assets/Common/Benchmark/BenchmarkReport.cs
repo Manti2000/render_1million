@@ -39,7 +39,7 @@ namespace MillionObjects.Benchmark
             var build = BuildInfo.Load();
             return new DeviceInfo
             {
-                model = SystemInfo.deviceModel,
+                model = DisplayMode.IsSteamDeck ? "Steam Deck" : SystemInfo.deviceModel,   // Linux reports a generic "PC" for the Deck
                 gpu = SystemInfo.graphicsDeviceName,
                 cpu = SystemInfo.processorType,
                 ramMb = SystemInfo.systemMemorySize,
@@ -78,6 +78,15 @@ namespace MillionObjects.Benchmark
         public float max;
     }
 
+    /// <summary>Draw calls per frame over a window: the count varies with culling as the camera orbits, so the range matters as much as the mean.</summary>
+    [Serializable]
+    public class DrawCallStats
+    {
+        public long min;
+        public float avg;
+        public long max;
+    }
+
     /// <summary>One measured step of the fixed-count sweep.</summary>
     [Serializable]
     public class SweepResult
@@ -95,7 +104,7 @@ namespace MillionObjects.Benchmark
         public float mainThreadMs;
         public float renderThreadMs;
         public float gpuMs;
-        public long drawCalls;
+        public DrawCallStats drawCalls = new DrawCallStats();
         public float allocatedMb;
         public float[] samples = Array.Empty<float>();
 

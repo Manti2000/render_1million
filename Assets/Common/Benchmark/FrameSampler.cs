@@ -16,6 +16,8 @@ namespace MillionObjects.Benchmark
         /// <summary>Frames kept for the HUD strip.</summary>
         public const int HistoryLength = 240;
         private const float BytesPerMegabyte = 1024f * 1024f;
+        /// <summary>GPU frame times above this are driver garbage (Windows reported 3e8 ms on the first frames), treated as unavailable.</summary>
+        private const float MaxCredibleGpuMs = 60_000f;
         /// <summary>Release-build render counters whose sum is the frame's draw call count.</summary>
         private static readonly string[] DrawCallCounterNames =
         {
@@ -130,18 +132,28 @@ namespace MillionObjects.Benchmark
             return any ? total : -1;
         }
 
-        /// <summary>Reads this frame's wall-clock time and the FrameTimingManager split.</summary>
+        /// <summary>Reads this frame's wall-clock time, draw call count and the FrameTimingManager split.</summary>
         private FrameSample CaptureSample()
         {
-            var sample = new FrameSample { FrameMs = Time.unscaledDeltaTime * 1000f };
+            var sample = new FrameSample { FrameMs = Time.unscaledDeltaTime * 1000f, DrawCalls = SumDrawCalls() };
             FrameTimingManager.CaptureFrameTimings();
             TimingAvailable = FrameTimingManager.GetLatestTimings(1, _timings) > 0;
             if (!TimingAvailable)
                 return sample;
             sample.MainThreadMs = (float)_timings[0].cpuMainThreadFrameTime;
             sample.RenderThreadMs = (float)_timings[0].cpuRenderThreadFrameTime;
-            sample.GpuMs = (float)_timings[0].gpuFrameTime;
+            sample.GpuMs = CredibleGpuMs(_timings[0].gpuFrameTime);
             return sample;
+        }
+
+        /// <summary>The reported GPU time, or zero (unavailable) when it is negative, not finite or absurdly large.</summary>
+        private static float CredibleGpuMs(double gpuFrameTime)
+        {
+            if (double.IsNaN(gpuFrameTime) || double.IsInfinity(gpuFrameTime))
+                return 0f;
+            if (gpuFrameTime <= 0 || gpuFrameTime > MaxCredibleGpuMs)
+                return 0f;
+            return (float)gpuFrameTime;
         }
 
         /// <summary>Appends a frame time to the ring buffer.</summary>

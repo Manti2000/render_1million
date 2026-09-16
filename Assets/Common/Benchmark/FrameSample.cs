@@ -11,5 +11,7 @@ namespace MillionObjects.Benchmark
         public float RenderThreadMs;
         /// <summary>GPU time reported by FrameTimingManager; zero when unavailable.</summary>
         public float GpuMs;
+        /// <summary>Draw calls summed over every render path's profiler counter; -1 when no counter is available.</summary>
+        public long DrawCalls;
     }
 }
