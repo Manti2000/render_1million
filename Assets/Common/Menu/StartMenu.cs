@@ -54,7 +54,7 @@ namespace MillionObjects
             _status = _root.Q<Label>("status");
             _corner = _document.rootVisualElement.Q<VisualElement>("corner");
             _document.rootVisualElement.Q<Button>("back").clicked += Show;
-            _document.rootVisualElement.Q<Button>("hud-toggle").clicked += ToggleHud;
+            _document.rootVisualElement.Q<Button>("hud-toggle").clicked += CycleHud;
             BuildStepButtons(_root.Q<VisualElement>("steps"));
             BuildCountButtons(_root.Q<VisualElement>("counts"));
             BindAutomaticButtons();
@@ -96,7 +96,7 @@ namespace MillionObjects
             Visible = true;
             ShowBackButton(false);
             if (_hud != null)
-                _hud.Visible = false;
+                _hud.Mode = HudMode.Hidden;
             if (_switcher.Active != null)
                 _switcher.UnloadStep();
         }
@@ -152,7 +152,7 @@ namespace MillionObjects
             Visible = false;
             ShowBackButton(true);
             if (_hud != null)
-                _hud.Visible = true;
+                _hud.Mode = HudMode.Full;
             _switcher.SpawnCount = _selectedCount;
             _switcher.LoadStep(stepIndex, true);
         }
@@ -172,8 +172,6 @@ namespace MillionObjects
                 return;
             _automaticRunActive = true;
             Visible = false;
-            if (_hud != null)
-                _hud.Visible = true;
             _status.text = string.Empty;
             _runner.StartRun(BenchmarkArgs.ForManualRun(quick), false);
         }
@@ -185,8 +183,6 @@ namespace MillionObjects
                 return;
             _automaticRunActive = true;
             Visible = false;
-            if (_hud != null)
-                _hud.Visible = true;
             _director.StartRun(BenchmarkArgs.ForManualRun(false));
         }
 
@@ -205,19 +201,17 @@ namespace MillionObjects
                 _corner.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        /// <summary>Shows or hides the stats overlay so the cloud can be viewed unobstructed.</summary>
-        private void ToggleHud()
+        /// <summary>Steps the stats overlay through its layouts, the same cycle as the HUD hotkey.</summary>
+        private void CycleHud()
         {
             if (_hud != null)
-                _hud.Visible = !_hud.Visible;
+                _hud.CycleMode();
         }
 
         /// <summary>Returns to the menu and shows where the report landed.</summary>
         private void OnBenchmarkCompleted(string reportPath)
         {
             _automaticRunActive = false;
-            if (_hud != null)
-                _hud.SetMinimal(false);
             Show();
             _status.text = reportPath != null ? $"Report written to {reportPath}" : "Report could not be written.";
         }

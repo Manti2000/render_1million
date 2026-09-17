@@ -28,14 +28,15 @@ Open `Assets/Common/Scenes/Bootstrap.unity` and press Play. A start menu lets yo
 |---|---|
 | `Esc` or the corner button | Back to the menu |
 | `1` to `5` | Load a step |
-| `+` / `-` | Multiply or divide the object count by ten and respawn |
+| `+` / `-` | Step one rung up or down the recording ladder and respawn |
 | `Up` / `Down` | Zoom in and out along the camera path |
 | `Left` / `Right` | Orbit the camera |
 | `R` | Respawn |
 | `A` | Toggle the attractor sphere (pushes cubes, they spring back) |
 | `Left click` | Recolour the cube under the cursor |
 | `C` | Pause or resume the camera path |
-| `H` or the corner button | Toggle the HUD |
+| `T` | Start or stop the automatic count ramp: climbs the recording ladder from the count on screen upward, a few seconds per count, stopping on the first count that measures under 4 fps |
+| `H` or the corner button | Cycle the HUD: off, framerate and object count, full |
 | `Space` | Freeze the field |
 
 ## Benchmarking

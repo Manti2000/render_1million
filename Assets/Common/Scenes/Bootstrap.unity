@@ -152,6 +152,7 @@ MonoBehaviour:
   _document: {fileID: 221620122}
   _switcher: {fileID: 1285120974}
   _sampler: {fileID: 1285120973}
+  _director: {fileID: 1285120975}
   _textRefreshInterval: 0.1
 --- !u!114 &221620122
 MonoBehaviour:
@@ -347,9 +348,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: MillionObjects.Common::MillionObjects.Benchmark.RecordingDirector
   _switcher: {fileID: 1285120974}
   _cameraRig: {fileID: 1569790810}
+  _sampler: {fileID: 1285120973}
   _hud: {fileID: 221620121}
-  _rampCounts: e803000010270000a086010040420f00
-  _holdSeconds: 6
+  _rampCounts: e80300001027000050c30000a086010040420f00a0252600404b4c00e07072008096980020bcbe00c0e1e400002d310140787d0180c3c901c00e1602005a6202
+  _holdSeconds: 3
+  _stopRampWhenUnplayable: 1
+  _unplayableFrameMs: 200
+  _measuredFramesPerCount: 5
+  _logRampProgress: 1
   _quitWhenDone: 1
 --- !u!114 &1285120976
 MonoBehaviour:
@@ -399,7 +405,10 @@ MonoBehaviour:
   _switcher: {fileID: 1285120974}
   _attractor: {fileID: 1285120979}
   _cameraRig: {fileID: 1569790810}
+  _director: {fileID: 1285120975}
   _hud: {fileID: 221620121}
+  _zoomPathSecondsPerSecond: 6
+  _orbitDegreesPerSecond: 45
 --- !u!114 &1285120978
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,5 +1,13 @@
 /* Sized for a 1080p recording viewed from the back of a conference room. */
-.hud {
+.hud-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.hud-panel {
     position: absolute;
     top: 24px;
     left: 24px;
@@ -90,6 +98,35 @@
 
 .status {
     margin-top: 4px;
+    font-size: 26px;
+    color: rgb(255, 214, 102);
+}
+
+.counter {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    padding: 10px 22px 14px 22px;
+    border-radius: 10px;
+    background-color: rgba(5, 8, 16, 0.62);
+    align-items: flex-end;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 240);
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.9);
+}
+
+.counter-value {
+    font-size: 72px;
+}
+
+.counter-caption {
+    font-size: 24px;
+    color: rgb(170, 190, 220);
+}
+
+.counter-timer {
+    margin-top: 6px;
     font-size: 26px;
     color: rgb(255, 214, 102);
 }

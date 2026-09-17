@@ -387,8 +387,7 @@ namespace MillionObjects.Benchmark
         {
             if (_hud == null)
                 return;
-            _hud.Visible = true;
-            _hud.SetMinimal(true);
+            _hud.Mode = HudMode.StatusLine;
         }
 
         /// <summary>Writes the HUD status line and the log.</summary>
