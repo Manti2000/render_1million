@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c147aaf67648ed650a1084e568a41144, type: 3}
   m_Name: BuildInfo
   m_EditorClassIdentifier: MillionObjects.Common::MillionObjects.Benchmark.BuildInfo
-  _gitHash: 7ef6bff
-  _buildTime: 2026-09-07 05:12:28
+  _gitHash: 988acb0
+  _buildTime: 2026-09-17 13:38:44
